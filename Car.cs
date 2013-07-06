@@ -8,8 +8,15 @@ namespace CarSim
 {
     class Car
     {
-        public int x;
-        public int y;
-        public float speed;
+        private CoOrds coords;
+        private double maxSpeed;
+        private double speed;
+        private double accel = 0.02; //acceleration per tick
+        public Path path;
+
+        public Car(CoOrds coords, float speed){
+            this.coords = coords;
+            this.maxSpeed = speed;
+        }
     }
 }

@@ -7,41 +7,113 @@ using System.IO;
 
 namespace CarSim
 {
+    public struct CoOrds {public int x, y;
+            public CoOrds (int x, int y) {this.x = x; this.y = y;}
+    }
+
     class Simulation
     {
+        private const int WIDTH = 20; //number of blocks to go on width
+        private const int HEIGHT = 15; //number of blockt to go on height
+        private const int TILESIZE = 32; //size of a square in pixels
+        private const CoOrds[] dirs = new CoOrds[4] {new CoOrds(1,0),
+                                                     new CoOrds(1,0),
+                                                     new CoOrds(1,0),
+                                                     new CoOrds(1,0)};
+        
+        private char[,] map = new char[WIDTH,HEIGHT];
+        private MapItem[,] objmap = new MapItem[WIDTH,HEIGHT]; //only stores crossroads and depots, for quick access
+
         private Car[] cars;
-        private char[,] arr = new char[20,15];
+        private Depot[] depots;
+        private Crossroad[] crossroads;
+        private Planner planner;
+        
 
         public Bitmap DrawBackground(){
-            Bitmap bmp = new Bitmap(640,480);
-            for (int i = 0; i < 20; i++){
-                for (int j = 0; j < 15; j++){
+            //ToDo: vyrobit vykreslovani podle mapy
+            Bitmap bmp = new Bitmap(WIDTH*TILESIZE,HEIGHT*TILESIZE);
+            for (int i = 0; i < WIDTH; i++){
+                for (int j = 0; j < HEIGHT; j++){
                     Graphics g = Graphics.FromImage(bmp);
-                    g.DrawImage(Properties.Resources.Road,i*32,j*32);
+                    g.DrawImage(Properties.Resources.Road,i*TILESIZE,j*TILESIZE);
                 }
             }
             return bmp;
         }
 
+        public void Start(){
+            //ToDo
+            ProcessMap();
+        }
+
+        public void Tick(){
+            //ToDo
+        }
+
+        private void ProcessMap(){
+            //creates Depos, Crossroads, and Paths between them
+            Queue<Depot> depotList= new Queue<Depot>();
+            Queue<Crossroad> crossList= new Queue<Crossroad>();
+            for (int i = 0; i < HEIGHT; i++){
+                for (int j = 0; j < WIDTH; j++){
+                    switch (map[j,i]){
+                        case 'D':
+                            Depot dpt = new Depot(new CoOrds(j,i));
+                            depotList.Enqueue(dpt);
+                            objmap[j,i]=dpt;
+                            break;
+                        case '+':
+                            int count = 0;
+                            foreach (CoOrds dir in dirs){
+                                char c = map[j+dir.x,i+dir.y];
+                                if((c == '+') || (c == 'D')) {count++;}
+                            }
+                            if(count>=3){
+                                Crossroad crd = new Crossroad(new CoOrds(j,i));
+                                crossList.Enqueue(crd);
+                                objmap[j,i]=crd;
+                            }
+                            break;
+                    }
+                }
+            }
+            planner = new Planner(map, objmap);
+            //create Depots
+            depots = new Depot[depotList.Count];
+            for (int i = 0; i < depots.Length; i++){
+                Depot dpt = depotList.Dequeue();
+                depots[i] = dpt;
+                planner.findConnections(dpt);
+            }
+            //create Crossroads
+            crossroads = new Crossroad[crossList.Count];
+            for (int i = 0; i < crossroads.Length; i++){
+                Crossroad crd = crossList.Dequeue();
+                crossroads[i] = crd;
+                planner.findConnections(crd);
+            }
+        }
+
         public void Load(string path = "save.txt"){
-            //save map
+            //loads map from file
             StreamReader sr = new StreamReader(path);
-            for (int i = 0; i < 15; i++){
+            for (int i = 0; i < HEIGHT; i++){
                 string line = sr.ReadLine();
-                for (int j = 0; j < 20; j++){
-                    arr[j,i]=line[j];
+                for (int j = 0; j < WIDTH; j++){
+                    map[j,i]=line[j];
                 }
             }
             sr.Close();
         }
 
         public void Save(string path = "save.txt"){
-            //save map
+            //saves map to file
             StreamWriter sw = new StreamWriter(path);
-            for (int i = 0; i < 15; i++){
+            for (int i = 0; i < HEIGHT; i++){
                 StringBuilder sb = new StringBuilder("********************");
-                for (int j = 0; j < 20; j++){
-                    sb[j]=arr[j,i];
+                for (int j = 0; j < WIDTH; j++){
+                    sb[j]=map[j,i];
                 }
                 sw.WriteLine(sb.ToString());
             }
