@@ -8,9 +8,16 @@ namespace CarSim
 {
     abstract class MapItem
     {
-        protected CoOrds coords;
+        protected CoOrds _coords;
         public MapItem(CoOrds coords){
-            this.coords = coords;
+            this._coords = coords;
         }
+
+        public CoOrds coords{
+            get {
+                return _coords;
+            }
+        }
+        
     }
 }

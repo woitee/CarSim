@@ -7,8 +7,28 @@ using System.IO;
 
 namespace CarSim
 {
-    public struct CoOrds {public int x, y;
+    public struct CoOrds{public int x, y;
             public CoOrds (int x, int y) {this.x = x; this.y = y;}
+            public bool Equals(CoOrds other){
+                return((this.x == other.x) && (this.y == other.y));
+            }
+            public CoOrds Add(CoOrds other){
+                return (new CoOrds (this.x + other.x, this.y + other.y));
+            }
+            public CoOrds Subtract(CoOrds other){
+                return (new CoOrds (this.x - other.x, this.y - other.y));
+            }
+            public int toDir(){
+                for (int i = 0; i < Simulation.dirs.Length; i++){
+                    if (this.Equals(Simulation.dirs[i])){
+                        return i;
+                    }
+                }
+                return -1; //counts as ErrorCode
+            }
+            public static CoOrds fromDir(int dir){
+                return (Simulation.dirs[dir]);
+            }
     }
 
     class Simulation
@@ -16,10 +36,10 @@ namespace CarSim
         private const int WIDTH = 20; //number of blocks to go on width
         private const int HEIGHT = 15; //number of blockt to go on height
         private const int TILESIZE = 32; //size of a square in pixels
-        private const CoOrds[] dirs = new CoOrds[4] {new CoOrds(1,0),
-                                                     new CoOrds(1,0),
-                                                     new CoOrds(1,0),
-                                                     new CoOrds(1,0)};
+        public static CoOrds[] dirs = new CoOrds[4] {new CoOrds(1,0),
+                                                           new CoOrds(0,1),
+                                                           new CoOrds(-1,0),
+                                                           new CoOrds(0,-1)};
         
         private char[,] map = new char[WIDTH,HEIGHT];
         private MapItem[,] objmap = new MapItem[WIDTH,HEIGHT]; //only stores crossroads and depots, for quick access
@@ -53,8 +73,9 @@ namespace CarSim
 
         private void ProcessMap(){
             //creates Depos, Crossroads, and Paths between them
-            Queue<Depot> depotList= new Queue<Depot>();
-            Queue<Crossroad> crossList= new Queue<Crossroad>();
+            //ToDo:CrossRoads
+            Queue<Depot> depotList=new Queue<Depot>();
+            Queue<Crossroad> crossList=new Queue<Crossroad>();
             for (int i = 0; i < HEIGHT; i++){
                 for (int j = 0; j < WIDTH; j++){
                     switch (map[j,i]){
@@ -65,8 +86,8 @@ namespace CarSim
                             break;
                         case '+':
                             int count = 0;
-                            foreach (CoOrds dir in dirs){
-                                char c = map[j+dir.x,i+dir.y];
+                            for (int k = 0; k < dirs.Length; k++){
+                                char c = map[j+dirs[k].x,i+dirs[k].y];
                                 if((c == '+') || (c == 'D')) {count++;}
                             }
                             if(count>=3){
