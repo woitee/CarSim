@@ -7,34 +7,11 @@ using System.IO;
 
 namespace CarSim
 {
-    public struct CoOrds{public int x, y;
-            public CoOrds (int x, int y) {this.x = x; this.y = y;}
-            public bool Equals(CoOrds other){
-                return((this.x == other.x) && (this.y == other.y));
-            }
-            public CoOrds Add(CoOrds other){
-                return (new CoOrds (this.x + other.x, this.y + other.y));
-            }
-            public CoOrds Subtract(CoOrds other){
-                return (new CoOrds (this.x - other.x, this.y - other.y));
-            }
-            public int toDir(){
-                for (int i = 0; i < Simulation.dirs.Length; i++){
-                    if (this.Equals(Simulation.dirs[i])){
-                        return i;
-                    }
-                }
-                return -1; //counts as ErrorCode
-            }
-            public static CoOrds fromDir(int dir){
-                return (Simulation.dirs[dir]);
-            }
-    }
-
+    
     class Simulation
     {
-        private const int WIDTH = 20; //number of blocks to go on width
-        private const int HEIGHT = 15; //number of blockt to go on height
+        private const int WIDTH = 20; //number of blocks to go, on width
+        private const int HEIGHT = 15; //number of blocks to go, on height
         private const int TILESIZE = 32; //size of a square in pixels
         public static CoOrds[] dirs = new CoOrds[4] {new CoOrds(1,0),
                                                            new CoOrds(0,1),
@@ -73,7 +50,6 @@ namespace CarSim
 
         private void ProcessMap(){
             //creates Depos, Crossroads, and Paths between them
-            //ToDo:CrossRoads
             Queue<Depot> depotList=new Queue<Depot>();
             Queue<Crossroad> crossList=new Queue<Crossroad>();
             for (int i = 0; i < HEIGHT; i++){

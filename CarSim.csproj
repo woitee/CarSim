@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Car.cs" />
+    <Compile Include="CoOrds.cs" />
     <Compile Include="Crossroad.cs" />
     <Compile Include="Depot.cs" />
     <Compile Include="MainForm.cs">

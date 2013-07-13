@@ -18,6 +18,5 @@ namespace CarSim
                 return _coords;
             }
         }
-        
     }
 }

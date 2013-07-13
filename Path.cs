@@ -8,10 +8,18 @@ namespace CarSim
 {
     //the path consists of parts of either going straight forward, or turning
     //we chose a representation considering this
-    //straight roads start at the first straight piece and end at the last straight piece
+    //PathParts have a location "from" and "to", "from" is inclusive and "to" exclusive
     class Path
     {
         public PathPart[] route;
+        public Path reverse(){
+            Path pth = new Path();
+            pth.route = new PathPart[route.Length];
+            for (int i = 0; i < route.Length; i++){
+                pth.route[i]=route[route.Length-i-1].reverse();
+            }
+            return pth;
+        }
     }
 
     public class PathPart
@@ -19,7 +27,7 @@ namespace CarSim
         public enum Type{Straight,Turn};
         public Type type;
         public int direction; //RDLU
-        CoOrds from;
+        public CoOrds from;
         public CoOrds to;
         bool crossroad;
         
@@ -29,6 +37,14 @@ namespace CarSim
             this.from = from;
             this.to = to;
             crossroad = isCrossroad;
+        }
+        public PathPart reverse(){
+            if (from.Equals(to)){ //length 0
+                return new PathPart(type,(direction+2)%4,from,to,crossroad);
+            } else {
+                CoOrds co = CoOrds.fromDir(direction);
+                return new PathPart(type,(direction+2)%4,to.Subtract(co),from.Subtract(co),crossroad);
+            }
         }
     }
 }
