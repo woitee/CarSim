@@ -10,9 +10,10 @@ namespace CarSim
     
     class Simulation
     {
-        private const int WIDTH = 20; //number of blocks to go, on width
-        private const int HEIGHT = 15; //number of blocks to go, on height
-        private const int TILESIZE = 32; //size of a square in pixels
+        public const int WIDTH = 10; //number of blocks on width
+        public const int HEIGHT = 8; //number of blocks on height
+        public const int TILESIZE = 64; //size of a square in pixels
+
         public static CoOrds[] dirs = new CoOrds[4] {new CoOrds(1,0),
                                                            new CoOrds(0,1),
                                                            new CoOrds(-1,0),
@@ -25,27 +26,23 @@ namespace CarSim
         private Depot[] depots;
         private Crossroad[] crossroads;
         private Planner planner;
-        
+        private Drawer drawer;
 
         public Bitmap DrawBackground(){
-            //ToDo: vyrobit vykreslovani podle mapy
-            Bitmap bmp = new Bitmap(WIDTH*TILESIZE,HEIGHT*TILESIZE);
-            for (int i = 0; i < WIDTH; i++){
-                for (int j = 0; j < HEIGHT; j++){
-                    Graphics g = Graphics.FromImage(bmp);
-                    g.DrawImage(Properties.Resources.Road,i*TILESIZE,j*TILESIZE);
-                }
-            }
-            return bmp;
+            drawer = new Drawer(map);
+            return drawer.DrawBackground();
         }
 
         public void Start(){
             //ToDo
-            ProcessMap();
         }
 
-        public void Tick(){
+        public void Tick(out Bitmap carsBitmap){
             //ToDo
+            for (int i = 0; i < cars.Length; i++){
+                cars[i].Tick();
+            }
+            carsBitmap = drawer.DrawCars(cars);
         }
 
         private void ProcessMap(){
@@ -81,14 +78,14 @@ namespace CarSim
             for (int i = 0; i < depots.Length; i++){
                 Depot dpt = depotList.Dequeue();
                 depots[i] = dpt;
-                planner.findConnections(dpt);
+                planner.FindConnections(dpt);
             }
             //create Crossroads
             crossroads = new Crossroad[crossList.Count];
             for (int i = 0; i < crossroads.Length; i++){
                 Crossroad crd = crossList.Dequeue();
                 crossroads[i] = crd;
-                planner.findConnections(crd);
+                planner.FindConnections(crd);
             }
         }
 
@@ -102,13 +99,20 @@ namespace CarSim
                 }
             }
             sr.Close();
+            ProcessMap();
+            //ToDo: load cars
+            //TEMP
+            Path pth = planner.FindPath(depots[0],depots[1]);
+            pth.route = new PathPart[1] {new PathPart(PathPart.Type.Straight, 1, new CoOrds(0,0), new CoOrds(0,0), false)};
+            cars = new Car[1] {new Car(new CoOrds(20,20),1,pth)};
+            //ToDo: load signs
         }
 
         public void Save(string path = "save.txt"){
             //saves map to file
             StreamWriter sw = new StreamWriter(path);
             for (int i = 0; i < HEIGHT; i++){
-                StringBuilder sb = new StringBuilder("********************");
+                StringBuilder sb = new StringBuilder(WIDTH);
                 for (int j = 0; j < WIDTH; j++){
                     sb[j]=map[j,i];
                 }

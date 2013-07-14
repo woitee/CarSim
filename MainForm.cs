@@ -13,21 +13,38 @@ namespace CarSim
     public partial class MainForm : Form
     {
         Simulation sim = new Simulation();
+        PictureBox pbCars = new PictureBox();
+        public Bitmap CarsImage {
+            get {return (Bitmap)pbCars.Image;} //to draw on
+        }
         public MainForm()
         {
             InitializeComponent();
-            pictureBox.Image = sim.DrawBackground();
+            pbCars.Width = pbBackground.Width; pbCars.Height = pbBackground.Height;
+            
+            //Creating Car layer
+            Bitmap bitmap = new Bitmap(pbCars.Width,pbCars.Height);
+            pbCars.Image = bitmap;
+            //pbCars.Image = Properties.Resources.Car; WORKS
+            pbCars.BackColor = Color.Transparent;
+            pbCars.Parent = pbBackground;
+
             sim.Load();
+            pbBackground.Image = sim.DrawBackground();
         }
+
 
         private void mainTimer_Tick(object sender, EventArgs e)
         {
-            sim.Tick();
+            Bitmap bmp;
+            sim.Tick(out bmp);
+            pbCars.Image = bmp;
         }
 
         private void btnStart_Click(object sender, EventArgs e)
         {
             sim.Start();
+            mainTimer.Start();
         }
 
         private void btnLoad_Click(object sender, EventArgs e)

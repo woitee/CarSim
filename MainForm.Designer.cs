@@ -29,22 +29,22 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.pictureBox = new System.Windows.Forms.PictureBox();
+            this.pbBackground = new System.Windows.Forms.PictureBox();
             this.btnStart = new System.Windows.Forms.Button();
             this.mainTimer = new System.Windows.Forms.Timer(this.components);
             this.btnLoad = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbBackground)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox
             // 
-            this.pictureBox.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.pictureBox.Location = new System.Drawing.Point(12, 12);
-            this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(640, 480);
-            this.pictureBox.TabIndex = 0;
-            this.pictureBox.TabStop = false;
+            this.pbBackground.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.pbBackground.Location = new System.Drawing.Point(12, 12);
+            this.pbBackground.Name = "pictureBox";
+            this.pbBackground.Size = new System.Drawing.Size(640, 512);
+            this.pbBackground.TabIndex = 0;
+            this.pbBackground.TabStop = false;
             // 
             // btnStart
             // 
@@ -85,21 +85,21 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(741, 505);
+            this.ClientSize = new System.Drawing.Size(742, 533);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnLoad);
             this.Controls.Add(this.btnStart);
-            this.Controls.Add(this.pictureBox);
+            this.Controls.Add(this.pbBackground);
             this.Name = "MainForm";
             this.Text = "Simulace Dopravy";
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbBackground)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.PictureBox pictureBox;
+        private System.Windows.Forms.PictureBox pbBackground;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Timer mainTimer;
         private System.Windows.Forms.Button btnLoad;

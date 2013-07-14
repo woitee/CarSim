@@ -16,10 +16,9 @@ namespace CarSim
             this.objmap = objmap;
         }
 
-        public void findConnections(MapItem mapitem){
+        public void FindConnections(MapItem mapitem){
             Depot dpt = mapitem as Depot;
             if (dpt != null){
-                //ToDo: Find connObj and path
                 if(dpt.connObj != null) {return;} //if already set
 
                 CoOrds co = dpt.coords; //only remains null if no path
@@ -91,7 +90,7 @@ namespace CarSim
                 return pth;
             }
             bool goOn = false;
-            do { //ToDo: Add Crossroad Support
+            do {
                 //find next
                 goOn = false;
                 for (int i = 0; i < Simulation.dirs.Length; i++){
@@ -130,6 +129,52 @@ namespace CarSim
                 }
             } while (goOn);
             endObj = null; return null;
+        }
+
+
+        public Path FindPath(Depot dptFrom, Depot dptTo){
+            //simple BFS for finding paths between depots
+            //ToDo: make it better, actually finding the shortest paths
+            int[,] dist = new int[map.GetLength(0),map.GetLength(1)];
+            bool[,] been = new bool[map.GetLength(0),map.GetLength(1)];
+            Queue<MapItem> qu = new Queue<MapItem>();
+            if(dptFrom.connObj == null) {return null;}
+            qu.Enqueue(dptFrom.connObj); been[dptFrom.coords.x,dptFrom.coords.y] = true;
+            while(qu.Count > 0){
+                MapItem cur = qu.Dequeue();
+                if(cur == dptTo){ break; }
+                else if (cur as Crossroad != null){
+                    Crossroad crd = cur as Crossroad;
+                    for (int i = 0; i < 4; i++){
+                        MapItem other = crd.connObjs[i];
+                        if (!been[other.coords.x, other.coords.y] && !(other == null)){
+                            qu.Enqueue(other);
+                            dist[other.coords.x, other.coords.y] = 1 + dist[cur.coords.x,cur.coords.y];
+                            been[other.coords.x, other.coords.y] = true;
+                        }
+                    }
+                }
+            }
+            if(dist[dptTo.coords.x,dptTo.coords.y] == 0){return null;}
+            //path exists
+            Stack<MapItem> st = new Stack<MapItem>();
+            MapItem mi = dptTo.connObj;
+            st.Push(mi);
+            int a = dist[mi.coords.x,mi.coords.y];
+            while(a != 1){
+                a--;
+                Crossroad crd = (Crossroad)mi;
+                for (int i = 0; i < 4; i++){
+                    if (dist[crd.connObjs[i].coords.x,crd.connObjs[i].coords.y] == a){
+                        st.Push(crd.connObjs[i]);
+                        mi = crd.connObjs[i];
+                    }
+                }
+            }
+            st.Push(dptTo.connObj);
+            int val = dist[dptTo.coords.x,dptTo.coords.y];
+            //ToDo: Process st to a path
+            return new Path(); //TEMP
         }
     }
 }

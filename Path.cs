@@ -20,6 +20,15 @@ namespace CarSim
             }
             return pth;
         }
+        /*public int Length{
+            get {
+                int val = 0;
+                for (int i = 0; i < route.Length; i++){
+                    val += route[i].Length;
+                }
+                return val;
+            }
+        }*/
     }
 
     public class PathPart
@@ -46,5 +55,10 @@ namespace CarSim
                 return new PathPart(type,(direction+2)%4,to.Subtract(co),from.Subtract(co),crossroad);
             }
         }
+        /*public int Length{
+            get {//ToDo: Temporary?
+                return(Math.Abs(from.x-to.x)+Math.Abs(from.y-to.y));
+            }
+        }*/
     }
 }

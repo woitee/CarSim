@@ -48,6 +48,7 @@
     <Compile Include="CoOrds.cs" />
     <Compile Include="Crossroad.cs" />
     <Compile Include="Depot.cs" />
+    <Compile Include="Drawer.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -87,7 +88,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Road.bmp" />
+    <Content Include="Resources\Car.png" />
+    <Content Include="Resources\Roads.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
