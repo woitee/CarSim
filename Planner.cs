@@ -18,55 +18,22 @@ namespace CarSim
 
         public void FindConnections(MapItem mapitem){
             for (int i = 0; i < 4; i++){
-                if(mapitem.connObjs[i] != null) {return;} //if this direction already set
-                CoOrds c = mapitem.coords.Add(CoOrds.fromDir(i));
-                if(c.isValid() && (map[c.x,c.y] == 'D' || map[c.x,c.y] == '+')) {
-                    mapitem.fromPaths[i] = getPath(c, mapitem.coords, out mapitem.connObjs[i]);
-                }
-                MapItem other = mapitem.connObjs[i];
-                if(other != null){ //this should pass or dead end
-                    Path pth = mapitem.fromPaths[i].reverse();
-                    int dir = pth.route[0].direction;
-                    other.connObjs[dir] = mapitem;
-                    other.fromPaths[dir] = pth;
+                if(mapitem.connObjs[i] == null) { //if this direction not already set
+                    CoOrds c = mapitem.coords.Add(CoOrds.fromDir(i));
+                    if(c.isValid() && (map[c.x,c.y] == 'D' || map[c.x,c.y] == '+')) {
+                        mapitem.fromPaths[i] = getPath(c, mapitem.coords, out mapitem.connObjs[i]);
+                    }
+                    MapItem other = mapitem.connObjs[i];
+                    if(other != null){ //this should pass or dead end
+                        Path pth = mapitem.fromPaths[i].reverse();
+                        int dir = pth.route[0].direction;
+                        other.connObjs[dir] = mapitem;
+                        other.fromPaths[dir] = pth;
+                    }
                 }
             }
             return;
-            }
-            /*
-            Depot dpt = mapitem as Depot;
-            if (dpt != null){
-                if(dpt.connObj != null) {return;} //if already set
-
-                CoOrds co = dpt.coords; //only remains null if no path
-                for (int i = 0; i < 4; i++){
-                    co = dpt.coords.Add(CoOrds.fromDir(i));
-                    char ch = map[co.x,co.y];
-                    if(ch == 'D' || ch == '+'){
-                        break;
-                    }
-                }
-                dpt.fromPath = getPath(co, dpt.coords, out dpt.connObj); //impossible value -777 for debug
-
-                Depot dptOther = dpt.connObj as Depot;
-                if(dptOther != null){
-                    dptOther.connObj = dpt;
-                    dptOther.fromPath = dpt.fromPath.reverse();
-                }
-                Crossroad crdOther = dpt.connObj as Crossroad;
-                if(crdOther != null){ //this should pass or dead end
-                    Path pth = dpt.fromPath.reverse();
-                    int dir = pth.route[0].direction;
-                    crdOther.connObjs[dir] = dpt;
-                    crdOther.fromPaths[dir] = pth;
-                }
-                return;
-            }
-            Mapitem crd = mapitem;
-            if (crd != null){ //this should pass
-                
-            }
-        }*/
+        }
 
         /// <summary>
         /// Returns Path to the nearest MapItem, according to map.

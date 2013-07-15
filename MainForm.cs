@@ -14,20 +14,23 @@ namespace CarSim
     {
         Simulation sim = new Simulation();
         PictureBox pbCars = new PictureBox();
+        FPSCounter fpsCounter;
+
         public Bitmap CarsImage {
             get {return (Bitmap)pbCars.Image;} //to draw on
         }
         public MainForm()
         {
             InitializeComponent();
-            pbCars.Width = pbBackground.Width; pbCars.Height = pbBackground.Height;
             
             //Creating Car layer
+            pbCars.Width = pbBackground.Width; pbCars.Height = pbBackground.Height;
             Bitmap bitmap = new Bitmap(pbCars.Width,pbCars.Height);
             pbCars.Image = bitmap;
             pbCars.BackColor = Color.Transparent;
             pbCars.Parent = pbBackground;
 
+            sim.tracer = new Tracer(infoLabel);
             sim.Load();
             pbBackground.Image = sim.DrawBackground();
         }
@@ -38,6 +41,8 @@ namespace CarSim
             Bitmap bmp;
             sim.Tick(out bmp);
             pbCars.Image = bmp;
+
+            FPSlabel.Text = "FPS: "+FPSCounter.Tick();
         }
 
         private void btnStart_Click(object sender, EventArgs e)

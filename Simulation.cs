@@ -32,6 +32,7 @@ namespace CarSim
         private Crossroad[] crossroads;
         private Planner planner;
         private Drawer drawer;
+        public Tracer tracer = new Tracer();
 
         private int time;
 
@@ -44,13 +45,13 @@ namespace CarSim
             //ToDo
             time = 0; nextCar = 0;
             activeCars = new List<Car>();
+            tracer.Trace("Simulation started.");
         }
 
         public void Tick(out Bitmap carsBitmap){
             //ToDo
             activeCars.RemoveAll(car => car.Tick()); //main simulation step hidden here
             while ((carStarts.Length > nextCar) && (carStarts[nextCar] <= time)){
-                //copy car
                 activeCars.Add(cars[nextCar++].Clone());
             }
             carsBitmap = drawer.DrawCars(activeCars);
@@ -61,7 +62,6 @@ namespace CarSim
         /// Creates Depots and Crossroad objects, and sets Paths between them.
         /// </summary>
         private void ProcessMap(){
-            //creates Depos, Crossroads, and Paths between them
             Queue<Depot> depotList=new Queue<Depot>();
             Queue<Crossroad> crossList=new Queue<Crossroad>();
             for (int i = 0; i < HEIGHT; i++){
@@ -137,6 +137,7 @@ namespace CarSim
             cars = stockCars.ToArray();
             carStarts = starts.ToArray();
             sr.Close();
+            tracer.Trace("Map loaded.");
         }
 
         public void Save(string path = "save.txt"){
@@ -158,6 +159,7 @@ namespace CarSim
                 sw.WriteLine("{0} {1} {2} {3}",ind1,ind2,cars[i].maxSpeed,carStarts[i]/FRAMERATE);
             }
             sw.Close();
+            tracer.Trace("Map saved.");
         }
     }
 }

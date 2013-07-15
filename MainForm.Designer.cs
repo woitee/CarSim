@@ -34,6 +34,8 @@
             this.mainTimer = new System.Windows.Forms.Timer(this.components);
             this.btnLoad = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
+            this.infoLabel = new System.Windows.Forms.Label();
+            this.FPSlabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pbBackground)).BeginInit();
             this.SuspendLayout();
             // 
@@ -58,7 +60,7 @@
             // 
             // mainTimer
             // 
-            this.mainTimer.Interval = 33;
+            this.mainTimer.Interval = 5;
             this.mainTimer.Tick += new System.EventHandler(this.mainTimer_Tick);
             // 
             // btnLoad
@@ -81,11 +83,31 @@
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
+            // infoLabel
+            // 
+            this.infoLabel.AutoSize = true;
+            this.infoLabel.Location = new System.Drawing.Point(12, 534);
+            this.infoLabel.Name = "infoLabel";
+            this.infoLabel.Size = new System.Drawing.Size(165, 13);
+            this.infoLabel.TabIndex = 4;
+            this.infoLabel.Text = "Information will be displayed here.";
+            // 
+            // FPSlabel
+            // 
+            this.FPSlabel.AutoSize = true;
+            this.FPSlabel.Location = new System.Drawing.Point(607, 534);
+            this.FPSlabel.Name = "FPSlabel";
+            this.FPSlabel.Size = new System.Drawing.Size(45, 13);
+            this.FPSlabel.TabIndex = 5;
+            this.FPSlabel.Text = "FPS: 30";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(742, 533);
+            this.ClientSize = new System.Drawing.Size(742, 556);
+            this.Controls.Add(this.FPSlabel);
+            this.Controls.Add(this.infoLabel);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnLoad);
             this.Controls.Add(this.btnStart);
@@ -94,6 +116,7 @@
             this.Text = "Simulace Dopravy";
             ((System.ComponentModel.ISupportInitialize)(this.pbBackground)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -104,6 +127,8 @@
         private System.Windows.Forms.Timer mainTimer;
         private System.Windows.Forms.Button btnLoad;
         private System.Windows.Forms.Button btnSave;
+        private System.Windows.Forms.Label infoLabel;
+        private System.Windows.Forms.Label FPSlabel;
     }
 }
 

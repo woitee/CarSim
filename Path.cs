@@ -64,7 +64,7 @@ namespace CarSim
                     CoOrds co = CoOrds.fromDir(direction);
                     return new PathPart(type,(direction+2)%4,to.Subtract(co),from.Subtract(co),crossroad);
                 case Type.TurnL:
-                    int newDir = (direction-1)%4;
+                    int newDir = (direction+3)%4;
                     co = CoOrds.fromDir(newDir);
                     return new PathPart(PathPart.Type.TurnR,newDir,from,from.Add(co),crossroad);
                 case Type.TurnR:
