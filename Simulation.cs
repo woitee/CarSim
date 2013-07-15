@@ -22,7 +22,7 @@ namespace CarSim
         private char[,] map = new char[WIDTH,HEIGHT];
         private MapItem[,] objmap = new MapItem[WIDTH,HEIGHT]; //only stores crossroads and depots, for quick access
 
-        private Car[] cars;
+        private List<Car> cars = new List<Car>();
         private Depot[] depots;
         private Crossroad[] crossroads;
         private Planner planner;
@@ -39,9 +39,10 @@ namespace CarSim
 
         public void Tick(out Bitmap carsBitmap){
             //ToDo
-            for (int i = 0; i < cars.Length; i++){
-                cars[i].Tick();
-            }
+            cars.RemoveAll(car => car.Tick());
+            /*foreach(Car car in cars){ 
+                if (car.Tick()) {}
+            }*/
             carsBitmap = drawer.DrawCars(cars);
         }
 
@@ -111,8 +112,9 @@ namespace CarSim
             }
             sr.Close();
             //TEMP
-            cars = new Car[1] {new Car(new CoOrds(20,20),1)};
-            cars[0].path = planner.FindPath(cars[0],depots[0],depots[1]);
+            Car car = new Car(new CoOrds(20,20),5);
+            car.path = planner.FindPath(car,depots[0],depots[1]);
+            cars.Add(car);
         }
 
         public void Save(string path = "save.txt"){

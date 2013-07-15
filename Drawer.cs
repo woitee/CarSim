@@ -47,11 +47,11 @@ namespace CarSim
             return bmp;
         }
 
-        public Bitmap DrawCars(Car[] cars){
+        public Bitmap DrawCars(List<Car> cars){
             Bitmap bmp = new Bitmap(WIDTH*TILESIZE,HEIGHT*TILESIZE);
             Graphics g = Graphics.FromImage(bmp);
-            for (int i = 0; i < cars.Length; i++){
-                g.DrawImage(Properties.Resources.Car,cars[i].coords.x,cars[i].coords.y);
+            foreach(Car car in cars){
+                g.DrawImage(Properties.Resources.Car,car.coords.x,car.coords.y);
             }
             return bmp;
         }

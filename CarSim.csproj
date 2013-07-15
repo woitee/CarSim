@@ -49,6 +49,7 @@
     <Compile Include="Crossroad.cs" />
     <Compile Include="Depot.cs" />
     <Compile Include="Drawer.cs" />
+    <Compile Include="Itinerary.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

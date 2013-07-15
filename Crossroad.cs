@@ -10,9 +10,15 @@ namespace CarSim
     {
         public MapItem[] connObjs = new MapItem[4];
         public Path[] fromPaths = new Path[4];
+        public Queue<Car>[] incomCars = new Queue<Car>[4] {new Queue<Car>(),new Queue<Car>(),new Queue<Car>(),new Queue<Car>()};
+        public const int visibleRange = 3; //# of squares you can see an incoming car from
 
         public Crossroad(CoOrds coords):base(coords){
             //ToDo
+        }
+
+        public bool CanGo(int dirFrom, int dirTo){
+            return true; //TEMP
         }
     }
 }

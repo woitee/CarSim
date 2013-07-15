@@ -177,6 +177,7 @@ namespace CarSim
                 }
             }
             Path pth = dptFrom.fromPath;
+            pth.route[0].from = dptFrom.coords;
             while(st.Count > 1){
                 Crossroad crd = (Crossroad)st.Pop();
                 int i;
@@ -191,6 +192,7 @@ namespace CarSim
                 pth = pth.Merge(pth2);
                 pth = pth.Merge(crd.fromPaths[i]);
             }
+            pth.route.Last().to = dptTo.coords;
             return pth;
         }
     }

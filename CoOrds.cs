@@ -17,6 +17,9 @@ namespace CarSim
             public CoOrds Subtract(CoOrds other){
                 return (new CoOrds (this.x - other.x, this.y - other.y));
             }
+            public CoOrds Multiply(int n){
+                return (new CoOrds (this.x * n, this.y * n));
+            }
             public int toDir(){
                 for (int i = 0; i < Simulation.dirs.Length; i++){
                     if (this.Equals(Simulation.dirs[i])){

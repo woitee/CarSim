@@ -7,19 +7,24 @@ using System.Threading.Tasks;
 namespace CarSim
 {
     class Itinerary{
-        public ItinPart[] list;
+        public Queue<ItinPart> route;
+        public Itinerary(Queue<ItinPart> route){
+            this.route = route;
+        }
     }
 
     public struct ItinPart{
-        ItinType type;
-        double speed;
-        public ItinPart(ItinType type, double speed){
+        public ItinType type;
+        public CoOrds dest;
+        public double speed;
+        public ItinPart(ItinType type, CoOrds dest, double speed){
             this.type = type;
+            this.dest = dest;
             this.speed = speed;
         }
     }
 
     public enum ItinType{
-        GoTo, SpeedUp, SlowDown
+        GoTo, TurnTo, AskCrossroad
     }
 }

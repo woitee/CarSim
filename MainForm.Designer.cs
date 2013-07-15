@@ -37,11 +37,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbBackground)).BeginInit();
             this.SuspendLayout();
             // 
-            // pictureBox
+            // pbBackground
             // 
             this.pbBackground.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.pbBackground.Location = new System.Drawing.Point(12, 12);
-            this.pbBackground.Name = "pictureBox";
+            this.pbBackground.Name = "pbBackground";
             this.pbBackground.Size = new System.Drawing.Size(640, 512);
             this.pbBackground.TabIndex = 0;
             this.pbBackground.TabStop = false;
