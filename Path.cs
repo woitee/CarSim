@@ -31,15 +31,6 @@ namespace CarSim
             }
             return pth;
         }
-        /*public int Length{
-            get {
-                int val = 0;
-                for (int i = 0; i < route.Length; i++){
-                    val += route[i].Length;
-                }
-                return val;
-            }
-        }*/
     }
 
     public class PathPart

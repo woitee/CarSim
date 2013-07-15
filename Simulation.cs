@@ -13,7 +13,7 @@ namespace CarSim
         public const int WIDTH = 10; //number of blocks on width
         public const int HEIGHT = 8; //number of blocks on height
         public const int TILESIZE = 64; //size of a square in pixels
-        public const int FRAMERATE = 30; //default framerate, if changing, change mainTimer
+        public const int FRAMERATE = 60; //default framerate, if changing, change mainTimer
 
         public static CoOrds[] dirs = new CoOrds[4] {new CoOrds(1,0),
                                                            new CoOrds(0,1),

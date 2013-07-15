@@ -51,7 +51,8 @@ namespace CarSim
             Bitmap bmp = new Bitmap(WIDTH*TILESIZE,HEIGHT*TILESIZE);
             Graphics g = Graphics.FromImage(bmp);
             foreach(Car car in cars){
-                g.DrawImage(Properties.Resources.Car,car.coords.x,car.coords.y);
+                g.DrawImage(Properties.Resources.CarS,car.coords.x,car.coords.y,
+                    new Rectangle(car.direction*10,0,10,10),GraphicsUnit.Pixel);
             }
             return bmp;
         }

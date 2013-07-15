@@ -22,7 +22,11 @@ namespace CarSim
         public CoOrds to{
             get{ return basicPath.route[basicPath.route.Length-1].to; }
         }
+        public int direction {
+        get{ return _direction; }
+        }
         
+        private int _direction = 0; //direction 0-12
         private CoOrds _coords;
         private double _maxSpeed;
         private double speed;
@@ -38,9 +42,8 @@ namespace CarSim
             get{return basicPath;}
             set{
                 basicPath = value;
-                _coords = value.route[0].from.Multiply(TILESIZE);
-                X=_coords.x; Y=_coords.y;
                 MakeItinerary();
+                X=_coords.x; Y=_coords.y;
             }
         }
 
@@ -48,26 +51,48 @@ namespace CarSim
             this._maxSpeed = maxSpeed;
         }
 
-        public Car(double speed, double X, double Y, CoOrds coords, Path path, Itinerary itinerary){
+        public Car(double speed, double X, double Y, CoOrds coords, int direction, Path path, Itinerary itinerary){
             this._maxSpeed = speed;
             this.X = X;
             this.Y = Y;
             this.basicPath = path;
             this._coords = coords;
+            this._direction = direction;
             this.itinerary = itinerary;
         }
 
         public void MakeItinerary(){
             //ToDo: make it real
+            _coords = path.route[0].from.Multiply(TILESIZE).Add(directionOffset(path.route[0].direction));
+            _direction = path.route[0].direction*3;
             Queue<ItinPart> qu = new Queue<ItinPart>();
             for (int i = 0; i < path.route.Length; i++){
                 if(path.route[i].type == PathPart.Type.Straight){
-                    qu.Enqueue(new ItinPart(ItinType.GoTo, path.route[i].to.Multiply(TILESIZE), _maxSpeed));
+                    qu.Enqueue(new ItinPart(ItinType.GoTo,
+                                            path.route[i].to.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction)),
+                                            _maxSpeed));
                 } else {
-                    qu.Enqueue(new ItinPart(ItinType.GoTo, path.route[i].to.Multiply(TILESIZE), _maxSpeed));
+                    qu.Enqueue(new ItinPart(ItinType.GoTo,
+                                            path.route[i].to.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction)),
+                                            _maxSpeed));
                 }
             }
             itinerary = new Itinerary(qu);
+        }
+
+        private CoOrds directionOffset(int dir){
+            switch(dir){
+                case 0:
+                    return new CoOrds(28,30);
+                case 1:
+                    return new CoOrds(29,29);
+                case 2:
+                    return new CoOrds(32,26);
+                case 3:
+                    return new CoOrds(29,29);
+                default:
+                    return new CoOrds(); //to feed compiler
+            }
         }
 
         public bool Tick(){ //returns if car has finished moving
@@ -76,7 +101,7 @@ namespace CarSim
             CoOrds goal = itinerary.route.First().dest;
             //Manhattan distance, as being the simplest, but the points differ only in x or y
             double distX = goal.x-X; double distY = goal.y-Y;
-            while(distToTravel > Math.Abs(distX)+Math.Abs(distY)){
+            while(distToTravel+1 > Math.Abs(distX)+Math.Abs(distY)){
                 if(itinerary.route.Count <= 1){
                     return true;
                 }
@@ -84,7 +109,9 @@ namespace CarSim
                 distToTravel -= Math.Abs(distX)+Math.Abs(distY);
                 itinerary.route.Dequeue();
                 goal = itinerary.route.First().dest;
+                
                 distX = goal.x-X; distY = goal.y-Y;
+                _direction = new CoOrds(Math.Sign(distX),Math.Sign(distY)).toDir()*3;
             }
             X += distToTravel*Math.Sign(distX);
             Y += distToTravel*Math.Sign(distY);
@@ -93,7 +120,7 @@ namespace CarSim
         }
 
         public Car Clone(){
-            return new Car(_maxSpeed,X,Y,coords,basicPath,itinerary.Clone());
+            return new Car(_maxSpeed,X,Y,coords,direction,basicPath,itinerary.Clone());
         }
     }
 }

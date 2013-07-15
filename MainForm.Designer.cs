@@ -97,9 +97,9 @@
             this.FPSlabel.AutoSize = true;
             this.FPSlabel.Location = new System.Drawing.Point(607, 534);
             this.FPSlabel.Name = "FPSlabel";
-            this.FPSlabel.Size = new System.Drawing.Size(45, 13);
+            this.FPSlabel.Size = new System.Drawing.Size(27, 13);
             this.FPSlabel.TabIndex = 5;
-            this.FPSlabel.Text = "FPS: 30";
+            this.FPSlabel.Text = "FPS";
             // 
             // MainForm
             // 

@@ -14,6 +14,9 @@ namespace CarSim
             public CoOrds Add(CoOrds other){
                 return (new CoOrds (this.x + other.x, this.y + other.y));
             }
+            public CoOrds Add(int x, int y){
+                return (new CoOrds (this.x + x, this.y + y));
+            }
             public CoOrds Subtract(CoOrds other){
                 return (new CoOrds (this.x - other.x, this.y - other.y));
             }

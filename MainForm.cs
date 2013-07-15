@@ -54,6 +54,7 @@ namespace CarSim
         private void btnLoad_Click(object sender, EventArgs e)
         {
             sim.Load();
+            pbBackground.Image = sim.DrawBackground();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
