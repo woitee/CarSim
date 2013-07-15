@@ -169,6 +169,7 @@ namespace CarSim
                     if (!(mi.connObjs[i] == null) && (dist[mi.connObjs[i].coords.x,mi.connObjs[i].coords.y] == a)){
                         mi = mi.connObjs[i];
                         st.Push(mi);
+                        break;
                     }
                 }
             }

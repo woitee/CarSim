@@ -44,8 +44,8 @@ namespace CarSim
             }
         }
 
-        public Car(double speed){
-            this._maxSpeed = speed;
+        public Car(double maxSpeed){
+            this._maxSpeed = maxSpeed;
         }
 
         public Car(double speed, double X, double Y, CoOrds coords, Path path, Itinerary itinerary){

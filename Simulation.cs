@@ -124,7 +124,6 @@ namespace CarSim
             List<int> starts = new List<int>();
             do {
                 line = sr.ReadLine();
-                //ToDo: load cars
                 string[] arr = line.Split(' ');
                 //From(DepotIndex) To(DepotIndex) Speed(double) TimeStart
                 Car car = new Car(double.Parse(arr[2]));
@@ -150,7 +149,6 @@ namespace CarSim
             sw.WriteLine("===SIGNS===");
             //ToDo: Write Signs
             sw.WriteLine("===CARS===");
-            //ToDo: Write Cars
             for (int i = 0; i < cars.Length; i++){
                 int ind1 = objmap[cars[i].from.x,cars[i].from.y].index;
                 int ind2 = objmap[cars[i].to.x,cars[i].to.y].index;
