@@ -11,7 +11,7 @@ namespace CarSim
         public MapItem connObj;
         public Path fromPath;
 
-        public Depot(CoOrds coords):base(coords){
+        public Depot(CoOrds coords, int index):base(coords,index){
             //ToDo
         }
 

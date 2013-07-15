@@ -57,6 +57,9 @@ namespace CarSim
             time++;
         }
 
+        /// <summary>
+        /// Creates Depots and Crossroad objects, and sets Paths between them.
+        /// </summary>
         private void ProcessMap(){
             //creates Depos, Crossroads, and Paths between them
             Queue<Depot> depotList=new Queue<Depot>();
@@ -65,7 +68,7 @@ namespace CarSim
                 for (int j = 0; j < WIDTH; j++){
                     switch (map[j,i]){
                         case 'D':
-                            Depot dpt = new Depot(new CoOrds(j,i));
+                            Depot dpt = new Depot(new CoOrds(j,i),depotList.Count);
                             depotList.Enqueue(dpt);
                             objmap[j,i]=dpt;
                             break;
@@ -76,7 +79,7 @@ namespace CarSim
                                 if((c == '+') || (c == 'D')) {count++;}
                             }
                             if(count>=3){
-                                Crossroad crd = new Crossroad(new CoOrds(j,i));
+                                Crossroad crd = new Crossroad(new CoOrds(j,i),crossList.Count);
                                 crossList.Enqueue(crd);
                                 objmap[j,i]=crd;
                             }
@@ -140,7 +143,7 @@ namespace CarSim
             for (int i = 0; i < HEIGHT; i++){
                 StringBuilder sb = new StringBuilder(WIDTH);
                 for (int j = 0; j < WIDTH; j++){
-                    sb[j]=map[j,i];
+                    sb.Append(map[j,i]);
                 }
                 sw.WriteLine(sb.ToString());
             }
@@ -148,6 +151,11 @@ namespace CarSim
             //ToDo: Write Signs
             sw.WriteLine("===CARS===");
             //ToDo: Write Cars
+            for (int i = 0; i < cars.Length; i++){
+                int ind1 = objmap[cars[i].from.x,cars[i].from.y].index;
+                int ind2 = objmap[cars[i].to.x,cars[i].to.y].index;
+                sw.WriteLine("{0} {1} {2} {3}",ind1,ind2,cars[i].maxSpeed,carStarts[i]/FRAMERATE);
+            }
             sw.Close();
         }
     }

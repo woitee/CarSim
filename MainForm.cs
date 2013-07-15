@@ -25,7 +25,6 @@ namespace CarSim
             //Creating Car layer
             Bitmap bitmap = new Bitmap(pbCars.Width,pbCars.Height);
             pbCars.Image = bitmap;
-            //pbCars.Image = Properties.Resources.Car; WORKS
             pbCars.BackColor = Color.Transparent;
             pbCars.Parent = pbBackground;
 

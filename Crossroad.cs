@@ -13,7 +13,7 @@ namespace CarSim
         public Queue<Car>[] incomCars = new Queue<Car>[4] {new Queue<Car>(),new Queue<Car>(),new Queue<Car>(),new Queue<Car>()};
         public const int visibleRange = 3; //# of squares you can see an incoming car from
 
-        public Crossroad(CoOrds coords):base(coords){
+        public Crossroad(CoOrds coords, int index):base(coords,index){
             //ToDo
         }
 

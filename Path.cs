@@ -44,7 +44,7 @@ namespace CarSim
 
     public class PathPart
     {
-        public enum Type{Straight,Turn};
+        public enum Type{Straight,TurnL,TurnR};
         public Type type;
         public int direction; //RDLU
         public CoOrds from;
@@ -59,17 +59,21 @@ namespace CarSim
             crossroad = isCrossroad;
         }
         public PathPart reverse(){
-            if (from.Equals(to)){ //length 0
-                return new PathPart(type,(direction+2)%4,from,to,crossroad);
-            } else {
-                CoOrds co = CoOrds.fromDir(direction);
-                return new PathPart(type,(direction+2)%4,to.Subtract(co),from.Subtract(co),crossroad);
+            switch (type){
+                case Type.Straight:
+                    CoOrds co = CoOrds.fromDir(direction);
+                    return new PathPart(type,(direction+2)%4,to.Subtract(co),from.Subtract(co),crossroad);
+                case Type.TurnL:
+                    int newDir = (direction-1)%4;
+                    co = CoOrds.fromDir(newDir);
+                    return new PathPart(PathPart.Type.TurnR,newDir,from,from.Add(co),crossroad);
+                case Type.TurnR:
+                    newDir = (direction+1)%4;
+                    co = CoOrds.fromDir(newDir);
+                    return new PathPart(PathPart.Type.TurnL,newDir,from,from.Add(co),crossroad);
+                default: //should never be reached
+                    return null;
             }
         }
-        /*public int Length{
-            get {//ToDo: Temporary?
-                return(Math.Abs(from.x-to.x)+Math.Abs(from.y-to.y));
-            }
-        }*/
     }
 }

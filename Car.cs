@@ -9,11 +9,22 @@ namespace CarSim
     class Car
     {
         private const int TILESIZE = Simulation.TILESIZE;
-        private CoOrds _coords;
+        
         public CoOrds coords{
             get{ return _coords; }
         }
-        private double maxSpeed;
+        public double maxSpeed{
+            get{ return _maxSpeed; }
+        }
+        public CoOrds from{
+            get{ return basicPath.route[0].from; }
+        }
+        public CoOrds to{
+            get{ return basicPath.route[basicPath.route.Length-1].to; }
+        }
+        
+        private CoOrds _coords;
+        private double _maxSpeed;
         private double speed;
         private double accel = 0.02; //acceleration per tick
         private double decel = 0.02; //deccelartion per tick
@@ -34,11 +45,11 @@ namespace CarSim
         }
 
         public Car(double speed){
-            this.maxSpeed = speed;
+            this._maxSpeed = speed;
         }
 
         public Car(double speed, double X, double Y, CoOrds coords, Path path, Itinerary itinerary){
-            this.maxSpeed = speed;
+            this._maxSpeed = speed;
             this.X = X;
             this.Y = Y;
             this.basicPath = path;
@@ -51,9 +62,9 @@ namespace CarSim
             Queue<ItinPart> qu = new Queue<ItinPart>();
             for (int i = 0; i < path.route.Length; i++){
                 if(path.route[i].type == PathPart.Type.Straight){
-                    qu.Enqueue(new ItinPart(ItinType.GoTo, path.route[i].to.Multiply(TILESIZE), maxSpeed));
+                    qu.Enqueue(new ItinPart(ItinType.GoTo, path.route[i].to.Multiply(TILESIZE), _maxSpeed));
                 } else {
-                    qu.Enqueue(new ItinPart(ItinType.GoTo, path.route[i].to.Multiply(TILESIZE), maxSpeed));
+                    qu.Enqueue(new ItinPart(ItinType.GoTo, path.route[i].to.Multiply(TILESIZE), _maxSpeed));
                 }
             }
             itinerary = new Itinerary(qu);
@@ -61,7 +72,7 @@ namespace CarSim
 
         public bool Tick(){ //returns if car has finished moving
             //follow path
-            double distToTravel = maxSpeed;
+            double distToTravel = _maxSpeed;
             CoOrds goal = itinerary.route.First().dest;
             //Manhattan distance, as being the simplest, but the points differ only in x or y
             double distX = goal.x-X; double distY = goal.y-Y;
@@ -82,7 +93,7 @@ namespace CarSim
         }
 
         public Car Clone(){
-            return new Car(maxSpeed,X,Y,coords,basicPath,itinerary.Clone());
+            return new Car(_maxSpeed,X,Y,coords,basicPath,itinerary.Clone());
         }
     }
 }

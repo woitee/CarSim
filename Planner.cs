@@ -108,7 +108,11 @@ namespace CarSim
                                 if(part.direction == i){ //if the road is continuing the same direction as before
                                     part.to = c;
                                 } else {
-                                    workPath.Enqueue(new PathPart(PathPart.Type.Turn, i, cur, c, false)); //1 square long
+                                    if (((i-part.direction) == 1) || ((i-part.direction) == -3)) {
+                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnR, i, cur, c, false)); //1 square long
+                                    } else {
+                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnL, i, cur, c, false)); //1 square long
+                                    }
                                     workPath.Enqueue(new PathPart(PathPart.Type.Straight, i, c, c, false)); //0 squares long
                                 }
                             }
@@ -185,9 +189,17 @@ namespace CarSim
                     if( crd.connObjs[i] == st.Peek() ) {break;}
                 }
                 int srcDir = pth.route.Last().direction;
-                int destDir = i;
+                //int destDir = i; //dont delete
                 Path pth2 = new Path();
-                PathPart.Type type = ((Math.Abs(srcDir-i) & 1) == 1) ? PathPart.Type.Turn : PathPart.Type.Straight;
+                //PathPart.Type type = ((Math.Abs(srcDir-i) & 1) == 1) ? PathPart.Type.Turn : PathPart.Type.Straight;
+                PathPart.Type type;
+                if(((i-srcDir) == 2) || ((i-srcDir) == -2)){
+                    type = PathPart.Type.Straight;
+                } else if (((i-srcDir) == 1) || ((i-srcDir) == -3)) {
+                    type = PathPart.Type.TurnL;
+                } else {
+                    type = PathPart.Type.TurnR;
+                }
                 pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true)};
                 pth = pth.Merge(pth2);
                 pth = pth.Merge(crd.fromPaths[i]);
