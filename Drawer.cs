@@ -31,7 +31,7 @@ namespace CarSim
                             int code = 0;
                             for (int k = 0; k < 4; k++){
                                 CoOrds co = new CoOrds(i,j).Add(Simulation.dirs[k]);
-                                if(map[co.x,co.y] == '+' || map[co.x,co.y] == 'D'){ code += powsOf2[k]; }
+                                if(co.isValid() && ((map[co.x,co.y] == '+') || (map[co.x,co.y] == 'D'))){ code += powsOf2[k]; }
                             }
                             g.DrawImage(Properties.Resources.Roads,i*TILESIZE,j*TILESIZE,
                                         new Rectangle(64*code-1,0,TILESIZE,TILESIZE),GraphicsUnit.Pixel); //ToDo: Figure the -1

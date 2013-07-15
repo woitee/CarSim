@@ -20,7 +20,7 @@ namespace CarSim
             for (int i = 0; i < 4; i++){
                 if(mapitem.connObjs[i] != null) {return;} //if this direction already set
                 CoOrds c = mapitem.coords.Add(CoOrds.fromDir(i));
-                if(map[c.x,c.y] == 'D' || map[c.x,c.y] == '+') {
+                if(c.isValid() && (map[c.x,c.y] == 'D' || map[c.x,c.y] == '+')) {
                     mapitem.fromPaths[i] = getPath(c, mapitem.coords, out mapitem.connObjs[i]);
                 }
                 MapItem other = mapitem.connObjs[i];
@@ -93,7 +93,7 @@ namespace CarSim
                 goOn = false;
                 for (int i = 0; i < Simulation.dirs.Length; i++){
                     CoOrds c = new CoOrds(cur.x+Simulation.dirs[i].x, cur.y+Simulation.dirs[i].y);
-                    if (!last.Equals(c)){
+                    if (!last.Equals(c) && c.isValid()){
                         char ch = map[c.x,c.y];
                         if (ch == 'D' || ch == '+'){
                             //c is next square

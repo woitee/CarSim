@@ -20,6 +20,9 @@ namespace CarSim
             public CoOrds Multiply(int n){
                 return (new CoOrds (this.x * n, this.y * n));
             }
+            public bool isValid(){
+                return ( (x>=0) && (x<Simulation.WIDTH) && (y>=0) && (y<Simulation.HEIGHT) );
+            }
             public int toDir(){
                 for (int i = 0; i < Simulation.dirs.Length; i++){
                     if (this.Equals(Simulation.dirs[i])){

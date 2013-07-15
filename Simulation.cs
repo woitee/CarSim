@@ -75,8 +75,11 @@ namespace CarSim
                         case '+':
                             int count = 0;
                             for (int k = 0; k < dirs.Length; k++){
-                                char c = map[j+dirs[k].x,i+dirs[k].y];
-                                if((c == '+') || (c == 'D')) {count++;}
+                                CoOrds co = new CoOrds(j+dirs[k].x, i+dirs[k].y);
+                                if( co.isValid() ){
+                                    char c = map[j+dirs[k].x,i+dirs[k].y];
+                                    if((c == '+') || (c == 'D')) {count++;}
+                                }
                             }
                             if(count>=3){
                                 Crossroad crd = new Crossroad(new CoOrds(j,i),crossList.Count);
