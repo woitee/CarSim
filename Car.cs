@@ -15,12 +15,24 @@ namespace CarSim
         private double maxSpeed;
         private double speed;
         private double accel = 0.02; //acceleration per tick
-        public Path basicPath; //basic, doesn't use scaling
+        private Path basicPath; //basic, doesn't use scaling
+        private Itinerary itinerary;
+        public Path path{
+            get{return basicPath;}
+            set{
+                basicPath = value;
+                _coords = value.route[0].from;
+            }
+        }
 
-        public Car(CoOrds coords, float speed, Path path){
+        public Car(CoOrds coords, float speed){
             this._coords = coords;
             this.maxSpeed = speed;
-            this.basicPath = path;
+        }
+
+        public void MakeItinerary(){
+            //ToDo:
+            
         }
 
         public void Tick(){

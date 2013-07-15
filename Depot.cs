@@ -14,5 +14,11 @@ namespace CarSim
         public Depot(CoOrds coords):base(coords){
             //ToDo
         }
+
+        public int direction{
+            get{
+                return fromPath.route[0].direction;
+            }
+        }
     }
 }

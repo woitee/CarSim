@@ -91,21 +91,28 @@ namespace CarSim
 
         public void Load(string path = "save.txt"){
             //loads map from file
+            string line;
             StreamReader sr = new StreamReader(path);
             for (int i = 0; i < HEIGHT; i++){
-                string line = sr.ReadLine();
+                line = sr.ReadLine();
                 for (int j = 0; j < WIDTH; j++){
                     map[j,i]=line[j];
                 }
             }
-            sr.Close();
             ProcessMap();
-            //ToDo: load cars
+            line = sr.ReadLine();
+            while(line != "===CARS==="){
+                //ToDo: load signs
+                line = sr.ReadLine();
+            }
+            while(!sr.EndOfStream){
+                //ToDo: load cars 
+                line = sr.ReadLine();
+            }
+            sr.Close();
             //TEMP
-            Path pth = planner.FindPath(depots[0],depots[1]);
-            pth.route = new PathPart[1] {new PathPart(PathPart.Type.Straight, 1, new CoOrds(0,0), new CoOrds(0,0), false)};
-            cars = new Car[1] {new Car(new CoOrds(20,20),1,pth)};
-            //ToDo: load signs
+            cars = new Car[1] {new Car(new CoOrds(20,20),1)};
+            cars[0].path = planner.FindPath(cars[0],depots[0],depots[1]);
         }
 
         public void Save(string path = "save.txt"){
@@ -118,6 +125,10 @@ namespace CarSim
                 }
                 sw.WriteLine(sb.ToString());
             }
+            sw.WriteLine("===SIGNS===");
+            //ToDo: Write Signs
+            sw.WriteLine("===CARS===");
+            //ToDo: Write Cars
             sw.Close();
         }
     }

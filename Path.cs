@@ -20,6 +20,17 @@ namespace CarSim
             }
             return pth;
         }
+        public Path Merge(Path other){
+            Path pth = new Path();
+            pth.route = new PathPart[this.route.Length+other.route.Length];
+            for (int i = 0; i < this.route.Length; i++){
+                pth.route[i] = this.route[i];
+            }
+            for (int i = 0; i < other.route.Length; i++){
+                pth.route[i+this.route.Length] = other.route[i];
+            }
+            return pth;
+        }
         /*public int Length{
             get {
                 int val = 0;

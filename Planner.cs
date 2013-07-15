@@ -29,7 +29,7 @@ namespace CarSim
                         break;
                     }
                 }
-                dpt.fromPath = getPath(co, new CoOrds(-777,-777), out dpt.connObj); //impossible value -777 for debug
+                dpt.fromPath = getPath(co, dpt.coords, out dpt.connObj); //impossible value -777 for debug
 
                 Depot dptOther = dpt.connObj as Depot;
                 if(dptOther != null){
@@ -80,6 +80,7 @@ namespace CarSim
         /// <returns></returns>
         private Path getPath(CoOrds cur, CoOrds last, out MapItem endObj){
             Queue<PathPart> workPath = new Queue<PathPart>();
+            workPath.Enqueue(new PathPart(PathPart.Type.Straight, cur.Subtract(last).toDir(), cur, cur, false)); //length 0
             if(objmap[cur.x,cur.y] != null){
                 int dir = cur.Subtract(last).toDir();
                 Path pth = new Path();
@@ -132,14 +133,17 @@ namespace CarSim
         }
 
 
-        public Path FindPath(Depot dptFrom, Depot dptTo){
+        public Path FindPath(Car car, Depot dptFrom, Depot dptTo){
             //simple BFS for finding paths between depots
             //ToDo: make it better, actually finding the shortest paths
+            //ToDo: Remember found roads, so similiar cars can get their Path immediately
             int[,] dist = new int[map.GetLength(0),map.GetLength(1)];
             bool[,] been = new bool[map.GetLength(0),map.GetLength(1)];
             Queue<MapItem> qu = new Queue<MapItem>();
             if(dptFrom.connObj == null) {return null;}
             qu.Enqueue(dptFrom.connObj); been[dptFrom.coords.x,dptFrom.coords.y] = true;
+            been[dptFrom.connObj.coords.x,dptFrom.connObj.coords.y] = true;
+            dist[dptFrom.connObj.coords.x,dptFrom.connObj.coords.y] = 1;
             while(qu.Count > 0){
                 MapItem cur = qu.Dequeue();
                 if(cur == dptTo){ break; }
@@ -147,7 +151,7 @@ namespace CarSim
                     Crossroad crd = cur as Crossroad;
                     for (int i = 0; i < 4; i++){
                         MapItem other = crd.connObjs[i];
-                        if (!been[other.coords.x, other.coords.y] && !(other == null)){
+                        if (!(other == null) && !been[other.coords.x, other.coords.y]){
                             qu.Enqueue(other);
                             dist[other.coords.x, other.coords.y] = 1 + dist[cur.coords.x,cur.coords.y];
                             been[other.coords.x, other.coords.y] = true;
@@ -159,22 +163,35 @@ namespace CarSim
             //path exists
             Stack<MapItem> st = new Stack<MapItem>();
             MapItem mi = dptTo.connObj;
+            st.Push(dptTo);
             st.Push(mi);
             int a = dist[mi.coords.x,mi.coords.y];
             while(a != 1){
                 a--;
                 Crossroad crd = (Crossroad)mi;
                 for (int i = 0; i < 4; i++){
-                    if (dist[crd.connObjs[i].coords.x,crd.connObjs[i].coords.y] == a){
-                        st.Push(crd.connObjs[i]);
+                    if (!(crd.connObjs[i] == null) && (dist[crd.connObjs[i].coords.x,crd.connObjs[i].coords.y] == a)){
                         mi = crd.connObjs[i];
+                        st.Push(mi);
                     }
                 }
             }
-            st.Push(dptTo.connObj);
-            int val = dist[dptTo.coords.x,dptTo.coords.y];
-            //ToDo: Process st to a path
-            return new Path(); //TEMP
+            Path pth = dptFrom.fromPath;
+            while(st.Count > 1){
+                Crossroad crd = (Crossroad)st.Pop();
+                int i;
+                for (i = 0; i < 4; i++){
+                    if( crd.connObjs[i] == st.Peek() ) {break;}
+                }
+                int srcDir = pth.route.Last().direction;
+                int destDir = i;
+                Path pth2 = new Path();
+                PathPart.Type type = ((Math.Abs(srcDir-i) & 1) == 1) ? PathPart.Type.Turn : PathPart.Type.Straight;
+                pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true)};
+                pth = pth.Merge(pth2);
+                pth = pth.Merge(crd.fromPaths[i]);
+            }
+            return pth;
         }
     }
 }
