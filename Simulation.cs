@@ -13,6 +13,7 @@ namespace CarSim
         public const int WIDTH = 10; //number of blocks on width
         public const int HEIGHT = 8; //number of blocks on height
         public const int TILESIZE = 64; //size of a square in pixels
+        public const int FRAMERATE = 30; //default framerate, if changing, change mainTimer
 
         public static CoOrds[] dirs = new CoOrds[4] {new CoOrds(1,0),
                                                            new CoOrds(0,1),
@@ -22,11 +23,17 @@ namespace CarSim
         private char[,] map = new char[WIDTH,HEIGHT];
         private MapItem[,] objmap = new MapItem[WIDTH,HEIGHT]; //only stores crossroads and depots, for quick access
 
-        private List<Car> cars = new List<Car>();
+        private List<Car> activeCars = new List<Car>();
+        private Car[] cars;
+        private int nextCar;
+        private int[] carStarts;
+
         private Depot[] depots;
         private Crossroad[] crossroads;
         private Planner planner;
         private Drawer drawer;
+
+        private int time;
 
         public Bitmap DrawBackground(){
             drawer = new Drawer(map);
@@ -35,15 +42,19 @@ namespace CarSim
 
         public void Start(){
             //ToDo
+            time = 0; nextCar = 0;
+            activeCars = new List<Car>();
         }
 
         public void Tick(out Bitmap carsBitmap){
             //ToDo
-            cars.RemoveAll(car => car.Tick());
-            /*foreach(Car car in cars){ 
-                if (car.Tick()) {}
-            }*/
-            carsBitmap = drawer.DrawCars(cars);
+            activeCars.RemoveAll(car => car.Tick()); //main simulation step hidden here
+            while ((carStarts.Length > nextCar) && (carStarts[nextCar] <= time)){
+                //copy car
+                activeCars.Add(cars[nextCar++].Clone());
+            }
+            carsBitmap = drawer.DrawCars(activeCars);
+            time++;
         }
 
         private void ProcessMap(){
@@ -101,20 +112,26 @@ namespace CarSim
                 }
             }
             ProcessMap();
-            line = sr.ReadLine();
+            sr.ReadLine(); line = sr.ReadLine();
             while(line != "===CARS==="){
                 //ToDo: load signs
                 line = sr.ReadLine();
             }
-            while(!sr.EndOfStream){
-                //ToDo: load cars 
+            List<Car> stockCars = new List<Car>();
+            List<int> starts = new List<int>();
+            do {
                 line = sr.ReadLine();
-            }
+                //ToDo: load cars
+                string[] arr = line.Split(' ');
+                //From(DepotIndex) To(DepotIndex) Speed(double) TimeStart
+                Car car = new Car(double.Parse(arr[2]));
+                car.path = planner.FindPath(car,depots[int.Parse(arr[0])],depots[int.Parse(arr[1])]);
+                stockCars.Add(car);
+                starts.Add(int.Parse(arr[3])*FRAMERATE);
+            } while(!sr.EndOfStream);
+            cars = stockCars.ToArray();
+            carStarts = starts.ToArray();
             sr.Close();
-            //TEMP
-            Car car = new Car(new CoOrds(20,20),5);
-            car.path = planner.FindPath(car,depots[0],depots[1]);
-            cars.Add(car);
         }
 
         public void Save(string path = "save.txt"){

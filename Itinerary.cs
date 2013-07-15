@@ -11,6 +11,10 @@ namespace CarSim
         public Itinerary(Queue<ItinPart> route){
             this.route = route;
         }
+        public Itinerary Clone(){
+            Queue<ItinPart> newRoute = new Queue<ItinPart>(route);
+            return new Itinerary(newRoute);
+        }
     }
 
     public struct ItinPart{

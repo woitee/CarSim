@@ -33,9 +33,17 @@ namespace CarSim
             }
         }
 
-        public Car(CoOrds coords, float speed){
-            this._coords = coords;
+        public Car(double speed){
             this.maxSpeed = speed;
+        }
+
+        public Car(double speed, double X, double Y, CoOrds coords, Path path, Itinerary itinerary){
+            this.maxSpeed = speed;
+            this.X = X;
+            this.Y = Y;
+            this.basicPath = path;
+            this._coords = coords;
+            this.itinerary = itinerary;
         }
 
         public void MakeItinerary(){
@@ -58,18 +66,23 @@ namespace CarSim
             //Manhattan distance, as being the simplest, but the points differ only in x or y
             double distX = goal.x-X; double distY = goal.y-Y;
             while(distToTravel > Math.Abs(distX)+Math.Abs(distY)){
-                X = goal.x; Y = goal.y;
-                itinerary.route.Dequeue();
-                if(itinerary.route.Count <= 0){
+                if(itinerary.route.Count <= 1){
                     return true;
                 }
+                X = goal.x; Y = goal.y;
+                distToTravel -= Math.Abs(distX)+Math.Abs(distY);
+                itinerary.route.Dequeue();
                 goal = itinerary.route.First().dest;
                 distX = goal.x-X; distY = goal.y-Y;
             }
-            X += maxSpeed*Math.Sign(distX);
-            Y += maxSpeed*Math.Sign(distY);
+            X += distToTravel*Math.Sign(distX);
+            Y += distToTravel*Math.Sign(distY);
             _coords = new CoOrds((int)X,(int)Y);
             return false;
+        }
+
+        public Car Clone(){
+            return new Car(maxSpeed,X,Y,coords,basicPath,itinerary.Clone());
         }
     }
 }
