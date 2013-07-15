@@ -10,6 +10,9 @@ namespace CarSim
     {
         protected CoOrds _coords;
         protected int _index;
+        public MapItem[] connObjs = new MapItem[4];
+        public Path[] fromPaths = new Path[4];
+
         public MapItem(CoOrds coords, int index){
             this._coords = coords;
             this._index = index;

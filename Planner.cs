@@ -17,6 +17,23 @@ namespace CarSim
         }
 
         public void FindConnections(MapItem mapitem){
+            for (int i = 0; i < 4; i++){
+                if(mapitem.connObjs[i] != null) {return;} //if this direction already set
+                CoOrds c = mapitem.coords.Add(CoOrds.fromDir(i));
+                if(map[c.x,c.y] == 'D' || map[c.x,c.y] == '+') {
+                    mapitem.fromPaths[i] = getPath(c, mapitem.coords, out mapitem.connObjs[i]);
+                }
+                MapItem other = mapitem.connObjs[i];
+                if(other != null){ //this should pass or dead end
+                    Path pth = mapitem.fromPaths[i].reverse();
+                    int dir = pth.route[0].direction;
+                    other.connObjs[dir] = mapitem;
+                    other.fromPaths[dir] = pth;
+                }
+            }
+            return;
+            }
+            /*
             Depot dpt = mapitem as Depot;
             if (dpt != null){
                 if(dpt.connObj != null) {return;} //if already set
@@ -45,31 +62,11 @@ namespace CarSim
                 }
                 return;
             }
-            Crossroad crd = mapitem as Crossroad;
+            Mapitem crd = mapitem;
             if (crd != null){ //this should pass
-                for (int i = 0; i < 4; i++){
-                    if(crd.connObjs[i] != null) {return;} //if this direction already set
-                    CoOrds c = crd.coords.Add(CoOrds.fromDir(i));
-                    
-                    if(map[c.x,c.y] == 'D' || map[c.x,c.y] == '+') {
-                        crd.fromPaths[i] = getPath(c, crd.coords, out crd.connObjs[i]);
-                    }
-                    Depot dptOther = crd.connObjs[i] as Depot;
-                    if(dptOther != null){ //we shouldn't really get here, as Depots are processed before Crossroads
-                        dptOther.connObj = crd;
-                        dptOther.fromPath = crd.fromPaths[i].reverse();
-                    }
-                    Crossroad crdOther = crd.connObjs[i] as Crossroad;
-                    if(crdOther != null){ //this should pass or dead end
-                        Path pth = crd.fromPaths[i].reverse();
-                        int dir = pth.route[0].direction;
-                        crdOther.connObjs[dir] = crd;
-                        crdOther.fromPaths[dir] = pth;
-                    }
-                }
-                return;
+                
             }
-        }
+        }*/
 
         /// <summary>
         /// Returns Path to the nearest MapItem, according to map.
@@ -144,66 +141,64 @@ namespace CarSim
             int[,] dist = new int[map.GetLength(0),map.GetLength(1)];
             bool[,] been = new bool[map.GetLength(0),map.GetLength(1)];
             Queue<MapItem> qu = new Queue<MapItem>();
-            if(dptFrom.connObj == null) {return null;}
-            qu.Enqueue(dptFrom.connObj); been[dptFrom.coords.x,dptFrom.coords.y] = true;
-            been[dptFrom.connObj.coords.x,dptFrom.connObj.coords.y] = true;
-            dist[dptFrom.connObj.coords.x,dptFrom.connObj.coords.y] = 1;
+            qu.Enqueue(dptFrom); been[dptFrom.coords.x,dptFrom.coords.y] = true;
+            dist[dptFrom.coords.x, dptFrom.coords.y] = 1;
             while(qu.Count > 0){
+                bool breaking = false;
                 MapItem cur = qu.Dequeue();
-                if(cur == dptTo){ break; }
-                else if (cur as Crossroad != null){
-                    Crossroad crd = cur as Crossroad;
-                    for (int i = 0; i < 4; i++){
-                        MapItem other = crd.connObjs[i];
-                        if (!(other == null) && !been[other.coords.x, other.coords.y]){
-                            qu.Enqueue(other);
-                            dist[other.coords.x, other.coords.y] = 1 + dist[cur.coords.x,cur.coords.y];
-                            been[other.coords.x, other.coords.y] = true;
-                        }
+                for (int i = 0; i < 4; i++){
+                    MapItem other = cur.connObjs[i];
+                    if (!(other == null) && !been[other.coords.x, other.coords.y]){
+                        qu.Enqueue(other);
+                        dist[other.coords.x, other.coords.y] = 1 + dist[cur.coords.x,cur.coords.y];
+                        if(other == dptTo){ breaking = true; break; }
+                        been[other.coords.x, other.coords.y] = true;
                     }
                 }
+                if(breaking) {break;}
             }
             if(dist[dptTo.coords.x,dptTo.coords.y] == 0){return null;}
             //path exists
             Stack<MapItem> st = new Stack<MapItem>();
-            MapItem mi = dptTo.connObj;
-            st.Push(dptTo);
+            MapItem mi = dptTo;
             st.Push(mi);
             int a = dist[mi.coords.x,mi.coords.y];
             while(a != 1){
                 a--;
-                Crossroad crd = (Crossroad)mi;
                 for (int i = 0; i < 4; i++){
-                    if (!(crd.connObjs[i] == null) && (dist[crd.connObjs[i].coords.x,crd.connObjs[i].coords.y] == a)){
-                        mi = crd.connObjs[i];
+                    if (!(mi.connObjs[i] == null) && (dist[mi.connObjs[i].coords.x,mi.connObjs[i].coords.y] == a)){
+                        mi = mi.connObjs[i];
                         st.Push(mi);
                     }
                 }
             }
-            Path pth = dptFrom.fromPath;
-            pth.route[0].from = dptFrom.coords;
+            Path pth = null;
             while(st.Count > 1){
-                Crossroad crd = (Crossroad)st.Pop();
+                MapItem crd = st.Pop();
                 int i;
                 for (i = 0; i < 4; i++){
                     if( crd.connObjs[i] == st.Peek() ) {break;}
                 }
-                int srcDir = pth.route.Last().direction;
-                //int destDir = i; //dont delete
-                Path pth2 = new Path();
-                //PathPart.Type type = ((Math.Abs(srcDir-i) & 1) == 1) ? PathPart.Type.Turn : PathPart.Type.Straight;
-                PathPart.Type type;
-                if(((i-srcDir) == 2) || ((i-srcDir) == -2)){
-                    type = PathPart.Type.Straight;
-                } else if (((i-srcDir) == 1) || ((i-srcDir) == -3)) {
-                    type = PathPart.Type.TurnL;
+                if(pth == null){
+                    pth = crd.fromPaths[i];
                 } else {
-                    type = PathPart.Type.TurnR;
+                    int srcDir = pth.route.Last().direction;
+                    //NOTE: destination Dir = i
+                    Path pth2 = new Path();
+                    PathPart.Type type;
+                    if(((i-srcDir) == 2) || ((i-srcDir) == -2)){
+                        type = PathPart.Type.Straight;
+                    } else if (((i-srcDir) == 1) || ((i-srcDir) == -3)) {
+                        type = PathPart.Type.TurnL;
+                    } else {
+                        type = PathPart.Type.TurnR;
+                    }
+                    pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true)};
+                    pth = pth.Merge(pth2);
+                    pth = pth.Merge(crd.fromPaths[i]);
                 }
-                pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true)};
-                pth = pth.Merge(pth2);
-                pth = pth.Merge(crd.fromPaths[i]);
             }
+            pth.route.First().from = dptFrom.coords;
             pth.route.Last().to = dptTo.coords;
             return pth;
         }
