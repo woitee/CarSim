@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.IO;
+using System.Globalization;
 
 namespace CarSim
 {
@@ -129,7 +130,7 @@ namespace CarSim
                 line = sr.ReadLine();
                 string[] arr = line.Split(' ');
                 //From(DepotIndex) To(DepotIndex) Speed(double) TimeStart
-                Car car = new Car(double.Parse(arr[2]));
+                Car car = new Car( double.Parse(arr[2], CultureInfo.InvariantCulture) );
                 car.path = planner.FindPath(car,depots[int.Parse(arr[0])],depots[int.Parse(arr[1])]);
                 stockCars.Add(car);
                 starts.Add(int.Parse(arr[3])*FRAMERATE);

@@ -21,6 +21,7 @@ namespace CarSim
         public ItinType type;
         public CoOrds dest;
         public double speed;
+
         public ItinPart(ItinType type, CoOrds dest, double speed){
             this.type = type;
             this.dest = dest;
@@ -29,6 +30,6 @@ namespace CarSim
     }
 
     public enum ItinType{
-        GoTo, TurnTo, AskCrossroad
+        GoTo, TurnLeftTo, TurnRightTo, AskCrossroad
     }
 }

@@ -34,11 +34,11 @@ namespace CarSim
                                 if(co.isValid() && ((map[co.x,co.y] == '+') || (map[co.x,co.y] == 'D'))){ code += powsOf2[k]; }
                             }
                             g.DrawImage(Properties.Resources.Roads,i*TILESIZE,j*TILESIZE,
-                                        new Rectangle(64*code-1,0,TILESIZE,TILESIZE),GraphicsUnit.Pixel); //ToDo: Figure the -1
+                                        new Rectangle(64*code,0,TILESIZE,TILESIZE),GraphicsUnit.Pixel); //ToDo: Figure the -1
                             break;
                         case '.':
                             g.DrawImage(Properties.Resources.Roads,i*TILESIZE,j*TILESIZE,
-                                        new Rectangle(1024-1,0,TILESIZE,TILESIZE),GraphicsUnit.Pixel); //ToDo: Figure the -1
+                                        new Rectangle(1024,0,TILESIZE,TILESIZE),GraphicsUnit.Pixel); //ToDo: Figure the -1
                             break;
                     }
                     
