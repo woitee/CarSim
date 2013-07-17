@@ -27,6 +27,9 @@ namespace CarSim
             this.dest = dest;
             this.speed = speed;
         }
+        public bool isTurn(){
+            return ((this.type == ItinType.TurnLeftTo) || (this.type == ItinType.TurnRightTo));
+        }
     }
 
     public enum ItinType{

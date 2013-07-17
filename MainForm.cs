@@ -14,7 +14,6 @@ namespace CarSim
     {
         Simulation sim = new Simulation();
         PictureBox pbCars = new PictureBox();
-        FPSCounter fpsCounter;
 
         public Bitmap CarsImage {
             get {return (Bitmap)pbCars.Image;} //to draw on

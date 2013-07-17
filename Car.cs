@@ -26,12 +26,14 @@ namespace CarSim
         get{ return _direction; }
         }
         
+        private const double accel = 0.01; //acceleration per tick
+        private const double maxLTurnSpeed = 0.5; //maximum speed when turning left  (looser turn)
+        private const double maxRTurnSpeed = 0.2; //maximum speed when turning right (sharper turn)
+
         private int _direction = 0; //direction 0-12
         private CoOrds _coords;
         private double _maxSpeed;
         private double speed;
-        private double accel = 0.02; //acceleration per tick
-        private double decel = 0.02; //deccelartion per tick
         private double X;
         private double Y;
 
@@ -41,6 +43,10 @@ namespace CarSim
         //for drawing turns
         private CoOrds turnFrom;
         private double turnProgress;
+
+        //for handling crossroads
+        private bool waitingForAllow = false;
+        private Crossroad cross;
 
         public Path path{
             get{return basicPath;}
@@ -56,6 +62,7 @@ namespace CarSim
         }
 
         public Car(double speed, double X, double Y, CoOrds coords, int direction, Path path, Itinerary itinerary){
+            //basically just for cloning
             this._maxSpeed = speed;
             this.X = X;
             this.Y = Y;
@@ -119,25 +126,47 @@ namespace CarSim
         }
 
         public bool Tick(){ //returns true if car has reached its destination
-            //follow path
-            double distToTravel = _maxSpeed;
+            //calculate distances
             ItinPart cur = itinerary.route.First();
-            double distX, distY;
-            dist(cur, out distX, out distY);
-            while(distToTravel > Math.Abs(distX)+Math.Abs(distY)){
+            ItinPart next = itinerary.route.Count > 1 ? itinerary.route.ElementAt(1) : new ItinPart();
+            double distX, distY, dist;
+            getDist(cur, out distX, out distY, out dist);
+            #region figure out what speed
+            if (waitingForAllow){
+                //waiting for crossroad to clear way, stop at current destination
+                double t=2*dist/speed;
+                speed -= speed/t;
+            } else if (next.isTurn() && dist < 50) {
+                //close to a turn, slow down to turning speed at current destination
+                double maxTSpeed = next.type == ItinType.TurnLeftTo ? maxLTurnSpeed : maxRTurnSpeed;
+                double t=2*dist/(maxTSpeed+speed);
+                speed -= (speed-maxTSpeed)/t;
+            } else if ((itinerary.route.Count <= 1) && dist < 50){ //should be 1
+                //close to a final depot, stop at current destination
+                double t=2*dist/speed;
+                speed -= speed/t;
+                speed = speed < 0.01 ? 0.01 : speed; //keep at least minimum speed to actually reach destination
+            } else {
+                speed = speed + accel;
+                speed = speed > maxSpeed ? maxSpeed : speed;
+            }
+            #endregion
+            #region follow path
+            double distToTravel = speed;
+            while(distToTravel > dist){
                 if(itinerary.route.Count <= 1){
                     return true;
                 }
                 X = cur.dest.x; Y = cur.dest.y;
-                distToTravel -= Math.Abs(distX)+Math.Abs(distY);
+                distToTravel -= dist;
                 itinerary.route.Dequeue();
                 cur = itinerary.route.First();
-                if((cur.type == ItinType.TurnLeftTo) || (cur.type == ItinType.TurnRightTo)){
+                if( cur.isTurn() ){
                     turnFrom = new CoOrds((int)Math.Round(X), (int)Math.Round(Y));
                     turnProgress = 0;
-                    dist(cur, out distX, out distY);
+                    getDist(cur, out distX, out distY, out dist);
                 } else {
-                    dist(cur, out distX, out distY);
+                    getDist(cur, out distX, out distY, out dist);
                     _direction = new CoOrds(Math.Sign(distX),Math.Sign(distY)).toDir()*3;
                 }
                 
@@ -197,26 +226,25 @@ namespace CarSim
                 #endregion
             }
             _coords = new CoOrds((int)X,(int)Y);
+            #endregion
             return false;
         }
 
-        private void dist(ItinPart itPart, out double distX, out double distY){
+        private void getDist(ItinPart itPart, out double distX, out double distY, out double totalDist){
             switch (itPart.type)
             {
                 case ItinType.GoTo:
                     distX = itPart.dest.x-X; distY = itPart.dest.y-Y;
+                    totalDist = Math.Abs(distX)+Math.Abs(distY);
                     break;
                 case ItinType.TurnLeftTo:
-                    distX = (Math.PI/2)*Math.Abs(itPart.dest.x-X)*(1-turnProgress); distY = 0;
-                    break;
                 case ItinType.TurnRightTo:
-                    distX = (Math.PI/2)*Math.Abs(itPart.dest.x-X)*(1-turnProgress); distY = 0;
+                    distX = 0; distY = 0;
+                    totalDist = (Math.PI/2)*Math.Abs(itPart.dest.x-X)*(1-turnProgress);
                     break;
                 case ItinType.AskCrossroad:
-                    distX = 0; distY = 0;
-                    return;
-                default: //just to feed compiler
-                    distX = 0; distY = 0;
+                default:
+                    distX = 0; distY = 0; totalDist = 0;
                     return;
             }
         }
