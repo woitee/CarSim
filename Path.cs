@@ -40,7 +40,7 @@ namespace CarSim
         public int direction; //RDLU
         public CoOrds from;
         public CoOrds to;
-        bool crossroad;
+        public bool crossroad;
         
         public PathPart(Type type, int direction, CoOrds from, CoOrds to, bool isCrossroad){
             this.type = type;
@@ -53,7 +53,7 @@ namespace CarSim
             switch (type){
                 case Type.Straight:
                     CoOrds co = CoOrds.fromDir(direction);
-                    return new PathPart(type,(direction+2)%4,to.Subtract(co),from.Subtract(co),crossroad);
+                    return new PathPart(type,CoOrds.oppDir(direction),to.Subtract(co),from.Subtract(co),crossroad);
                 case Type.TurnL:
                     int newDir = (direction+3)%4;
                     co = CoOrds.fromDir(newDir);

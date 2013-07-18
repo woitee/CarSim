@@ -17,15 +17,17 @@ namespace CarSim
         }
     }
 
-    public struct ItinPart{
+    public class ItinPart{
         public ItinType type;
         public CoOrds dest;
-        public double speed;
 
-        public ItinPart(ItinType type, CoOrds dest, double speed){
+        public ItinPart(){
+            this.type = ItinType.GoTo;
+            //rest is null
+        }
+        public ItinPart(ItinType type, CoOrds dest){
             this.type = type;
             this.dest = dest;
-            this.speed = speed;
         }
         public bool isTurn(){
             return ((this.type == ItinType.TurnLeftTo) || (this.type == ItinType.TurnRightTo));
@@ -33,6 +35,6 @@ namespace CarSim
     }
 
     public enum ItinType{
-        GoTo, TurnLeftTo, TurnRightTo, AskCrossroad
+        GoTo, TurnLeftTo, TurnRightTo, AskCrossroad, EnterCrossroad
     }
 }

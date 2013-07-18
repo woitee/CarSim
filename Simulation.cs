@@ -35,7 +35,10 @@ namespace CarSim
         private Drawer drawer;
         public Tracer tracer = new Tracer();
 
-        private int time;
+        private static int time;
+        public static int Time{
+            get {return time;}
+        }
 
         public Bitmap DrawBackground(){
             drawer = new Drawer(map);
@@ -46,14 +49,24 @@ namespace CarSim
             //ToDo
             time = 0; nextCar = 0;
             activeCars = new List<Car>();
+            foreach (MapItem mi in depots){
+                mi.Reset();
+            }
+            foreach (MapItem mi in crossroads){
+                mi.Reset();
+            }
             tracer.Trace("Simulation started.");
         }
 
         public void Tick(out Bitmap carsBitmap){
-            //ToDo
             activeCars.RemoveAll(car => car.Tick()); //main simulation step hidden here
-            while ((carStarts.Length > nextCar) && (carStarts[nextCar] <= time)){
-                activeCars.Add(cars[nextCar++].Clone());
+            while ((carStarts.Length > nextCar) && (carStarts[nextCar] <= time)){ //insert new cars
+                Car car = cars[nextCar++].Clone();
+                MapItem srcDepot = objmap[car.from.x, car.from.y];
+                MapItem mi = srcDepot.connObjs[car.direction/3];
+                car.cross = mi; mi.incomCars[ mi.getDirOf(srcDepot) ].Add(car);
+                
+                activeCars.Add(car);
             }
             carsBitmap = drawer.DrawCars(activeCars);
             time++;

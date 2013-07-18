@@ -154,12 +154,13 @@ namespace CarSim
                     //NOTE: destination Dir = i
                     Path pth2 = new Path();
                     PathPart.Type type;
-                    if(((i-srcDir) == 2) || ((i-srcDir) == -2)){
+                    //if(((i-srcDir) == 2) || ((i-srcDir) == -2)){ //this means turning back
+                    if(i == srcDir){
                         type = PathPart.Type.Straight;
                     } else if (((i-srcDir) == 1) || ((i-srcDir) == -3)) {
-                        type = PathPart.Type.TurnL;
-                    } else {
                         type = PathPart.Type.TurnR;
+                    } else {
+                        type = PathPart.Type.TurnL;
                     }
                     pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true)};
                     pth = pth.Merge(pth2);

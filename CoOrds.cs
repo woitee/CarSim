@@ -23,6 +23,12 @@ namespace CarSim
             public CoOrds Multiply(int n){
                 return (new CoOrds (this.x * n, this.y * n));
             }
+            public double Distance(){
+                return Math.Sqrt(x*x+y*y);
+            }
+            public double Distance(CoOrds other){
+                return other.Subtract(this).Distance();
+            }
             public bool isValid(){
                 return ( (x>=0) && (x<Simulation.WIDTH) && (y>=0) && (y<Simulation.HEIGHT) );
             }
@@ -36,6 +42,16 @@ namespace CarSim
             }
             public static CoOrds fromDir(int dir){
                 return (Simulation.dirs[dir]);
+            }
+
+            public static int oppDir(int dir){
+                return (dir+2)%4;
+            }
+            public static int toRightDir(int dir){
+                return (dir+3)%4;
+            }
+            public static int toLeftDir(int dir){
+                return (dir+1)%4;
             }
     }
 }

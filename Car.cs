@@ -46,7 +46,9 @@ namespace CarSim
 
         //for handling crossroads
         private bool waitingForAllow = false;
-        private Crossroad cross;
+        public MapItem cross;
+
+        //for handling crossroad queues of car driving in
 
         public Path path{
             get{return basicPath;}
@@ -57,10 +59,15 @@ namespace CarSim
             }
         }
 
-        public Car(double maxSpeed){
+        public Car(){
+            this._maxSpeed = 0;
+            this.X = -777;
+            this.Y = -777;
+            this._coords = new CoOrds(-777,-777);
+        }
+        public Car(double maxSpeed){ 
             this._maxSpeed = maxSpeed;
         }
-
         public Car(double speed, double X, double Y, CoOrds coords, int direction, Path path, Itinerary itinerary){
             //basically just for cloning
             this._maxSpeed = speed;
@@ -78,19 +85,35 @@ namespace CarSim
             _direction = path.route[0].direction*3;
             Queue<ItinPart> qu = new Queue<ItinPart>();
             for (int i = 0; i < path.route.Length; i++){
+                ItinPart itPart;
                 if(path.route[i].type == PathPart.Type.Straight){
-                    qu.Enqueue(new ItinPart(ItinType.GoTo,
-                                            path.route[i].to.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction,false)),
-                                            _maxSpeed));
+                    itPart = new ItinPart(ItinType.GoTo,
+                                          path.route[i].to.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction,false))
+                                         );
                 } else if (path.route[i].type == PathPart.Type.TurnL){
-                    qu.Enqueue(new ItinPart(ItinType.TurnLeftTo,
-                                            path.route[i].from.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction,true)),
-                                            _maxSpeed));
+                    itPart = new ItinPart(ItinType.TurnLeftTo,
+                                          path.route[i].from.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction,true))
+                                         );
                 } else { //turnR
-                    qu.Enqueue(new ItinPart(ItinType.TurnRightTo,
-                                            path.route[i].from.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction,true)),
-                                            _maxSpeed));
+                    itPart = new ItinPart(ItinType.TurnRightTo,
+                                          path.route[i].from.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction,true))
+                                         );
                 }
+                if(path.route[i].crossroad){
+                    //we are now on a road thats one square long
+                    ItinPart toSplit = qu.Last(); //the one we put there last time
+                    if (toSplit.type != ItinType.GoTo) {throw new Exception();}
+                    CoOrds splitPoint = toSplit.dest.Subtract( CoOrds.fromDir(path.route[i-1].direction).Multiply(50) );
+                    CoOrds endPoint = toSplit.dest;
+                    toSplit.dest = splitPoint;
+                    qu.Enqueue(new ItinPart(ItinType.AskCrossroad, path.route[i].from));
+                    qu.Enqueue(new ItinPart(ItinType.GoTo, endPoint));
+                    qu.Enqueue(new ItinPart(ItinType.EnterCrossroad, new CoOrds(
+                                                                                CoOrds.oppDir(path.route[i-1].direction),
+                                                                                path.route[i].direction
+                                                                               )));
+                }
+                qu.Enqueue(itPart);
             }
             itinerary = new Itinerary(qu);
         }
@@ -129,21 +152,52 @@ namespace CarSim
             //calculate distances
             ItinPart cur = itinerary.route.First();
             ItinPart next = itinerary.route.Count > 1 ? itinerary.route.ElementAt(1) : new ItinPart();
+            next = next.type == ItinType.EnterCrossroad ? itinerary.route.ElementAt(2) : next;
             double distX, distY, dist;
             getDist(cur, out distX, out distY, out dist);
             #region figure out what speed
+            #region maybe ask crossroad if i should go
+            if (waitingForAllow){
+                int curDir = CoOrds.oppDir(direction/3);
+                int toDir = -1; //errorCode
+                switch (next.type){
+                    case ItinType.GoTo:
+                        toDir = curDir;
+                        break;
+                    case ItinType.TurnLeftTo:
+                        toDir = CoOrds.toLeftDir(curDir);
+                        break;
+                    case ItinType.TurnRightTo:
+                        toDir = CoOrds.toRightDir(curDir);
+                        break;
+                    case ItinType.AskCrossroad:
+                    case ItinType.EnterCrossroad:
+                    default:
+                        break;
+                }
+                waitingForAllow = !cross.CanGo(this,curDir,toDir);
+            }
+            #endregion
             if (waitingForAllow){
                 //waiting for crossroad to clear way, stop at current destination
                 double t=2*dist/speed;
+                t = t < 1 ? 1 : t;
                 speed -= speed/t;
             } else if (next.isTurn() && dist < 50) {
                 //close to a turn, slow down to turning speed at current destination
                 double maxTSpeed = next.type == ItinType.TurnLeftTo ? maxLTurnSpeed : maxRTurnSpeed;
-                double t=2*dist/(maxTSpeed+speed);
-                speed -= (speed-maxTSpeed)/t;
+                if (speed > maxTSpeed){
+                    double t=2*dist/(maxTSpeed+speed);
+                    t = t < 1 ? 1 : t;
+                    speed -= (speed-maxTSpeed)/t;
+                } else {
+                    speed = speed + accel;
+                    speed = speed > maxTSpeed ? maxTSpeed : speed;
+                }
             } else if ((itinerary.route.Count <= 1) && dist < 50){ //should be 1
                 //close to a final depot, stop at current destination
                 double t=2*dist/speed;
+                t = t < 1 ? 1 : t;
                 speed -= speed/t;
                 speed = speed < 0.01 ? 0.01 : speed; //keep at least minimum speed to actually reach destination
             } else {
@@ -154,11 +208,24 @@ namespace CarSim
             #region follow path
             double distToTravel = speed;
             while(distToTravel > dist){
+                //all encountering roads code here
                 if(itinerary.route.Count <= 1){
-                    return true;
+                    return true; //end of path
                 }
-                X = cur.dest.x; Y = cur.dest.y;
                 distToTravel -= dist;
+                if (cur.type == ItinType.AskCrossroad){
+                    //cross = (Crossroad)objmap[cur.dest.x, cur.dest.y];
+                    waitingForAllow = true;
+                } else if (cur.type == ItinType.EnterCrossroad) {
+                    //ToDo: Dequeue from crosses queue and enqueue into next one.
+                    cross.incomCars[cur.dest.x].Remove(this);
+                    MapItem newCross = cross.connObjs[cur.dest.y];
+                    newCross.incomCars[newCross.getDirOf(cross)].Add(this);
+                    //ToDo: Maybe recount remaining speed and act accordingly
+
+                } else {
+                    X = cur.dest.x; Y = cur.dest.y;
+                }
                 itinerary.route.Dequeue();
                 cur = itinerary.route.First();
                 if( cur.isTurn() ){
@@ -169,7 +236,6 @@ namespace CarSim
                     getDist(cur, out distX, out distY, out dist);
                     _direction = new CoOrds(Math.Sign(distX),Math.Sign(distY)).toDir()*3;
                 }
-                
             }
             if(cur.type == ItinType.GoTo){
                 X += distToTravel*Math.Sign(distX);
@@ -243,6 +309,7 @@ namespace CarSim
                     totalDist = (Math.PI/2)*Math.Abs(itPart.dest.x-X)*(1-turnProgress);
                     break;
                 case ItinType.AskCrossroad:
+                case ItinType.EnterCrossroad:
                 default:
                     distX = 0; distY = 0; totalDist = 0;
                     return;
@@ -250,7 +317,7 @@ namespace CarSim
         }
 
         public Car Clone(){
-            return new Car(_maxSpeed,X,Y,coords,direction,basicPath,itinerary.Clone());
+            return new Car(_maxSpeed,X,Y,coords,direction,basicPath,itinerary.Clone() );
         }
     }
 }

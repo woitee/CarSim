@@ -8,15 +8,34 @@ namespace CarSim
 {
     class Crossroad : MapItem
     {
-        public Queue<Car>[] incomCars = new Queue<Car>[4] {new Queue<Car>(),new Queue<Car>(),new Queue<Car>(),new Queue<Car>()};
-        public const int visibleRange = 3; //# of squares you can see an incoming car from
 
         public Crossroad(CoOrds coords, int index):base(coords,index){
             //ToDo
         }
 
-        public bool CanGo(int dirFrom, int dirTo){
-            return true; //TEMP
+        private Car lastPassed = new Car();
+
+        public override bool CanGo(Car car, int dirFrom, int dirTo){
+            int toRight = CoOrds.toRightDir(dirFrom);
+            int toLeft = CoOrds.toLeftDir(dirFrom);
+
+            if(lastPassed.coords.Distance(this.dispCoords) > 11){
+                if(toRight == dirTo){
+                    lastPassed = car;
+                    return true;
+                }
+                if(nearestCar(toRight) > 80){
+                    if(toLeft != dirTo || nearestCar(toLeft) > 80){
+                        lastPassed = car;
+                        return true;   
+                    }
+                }
+            }
+            return false;
+        }
+        public override void Reset(){
+            base.Reset();
+            lastPassed = new Car();
         }
     }
 }
