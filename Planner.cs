@@ -49,8 +49,7 @@ namespace CarSim
                 int dir = cur.Subtract(last).toDir();
                 Path pth = new Path();
                 pth.route = new PathPart[1];
-                pth.route[0] = new PathPart(PathPart.Type.Straight, dir, cur, cur, //length 0
-                                            objmap[cur.x,cur.y] as Crossroad != null);
+                pth.route[0] = new PathPart(PathPart.Type.Straight, dir, cur, cur, false);
                 endObj = objmap[cur.x, cur.y];
                 return pth;
             }

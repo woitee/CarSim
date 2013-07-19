@@ -126,7 +126,9 @@ namespace CarSim
                 if(path.route[i].crossroad){
                     //we are now on a road thats one square long
                     ItinPart toSplit = qu.Last(); //the one we put there last time
-                    if (toSplit.type != ItinType.GoTo) {throw new Exception();}
+                    if (toSplit.type != ItinType.GoTo) {
+                       throw new Exception("Pathfinding failed."); //just after crossroad, put connecting road
+                    }
                     CoOrds splitPoint = toSplit.dest.Subtract( CoOrds.fromDir(path.route[i-1].direction).Multiply(50) );
                     CoOrds endPoint = toSplit.dest;
                     toSplit.dest = splitPoint;
@@ -136,9 +138,13 @@ namespace CarSim
                                                                                 CoOrds.oppDir(path.route[i-1].direction),
                                                                                 path.route[i].direction
                                                                                )));
-                } else {
+                    /*if(path.route[i+1].from.Equals(path.route[i+1].to)) {
+                        //a crossroad or mapitem immediately following this
+                        qu.Enqueue(itPart);
+                    }*/
+                } //else {
                     qu.Enqueue(itPart);
-                }
+                //}
             }
             return new Itinerary(qu);
         }
