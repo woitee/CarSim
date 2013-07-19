@@ -32,6 +32,12 @@ namespace CarSim
 
         private int _direction = 0; //direction 0-12
         private CoOrds _coords;
+        private void addToCoords(CoOrds co){
+            _coords.x += co.x;
+            _coords.y += co.y;
+            X += co.x;
+            Y += co.y; 
+        }
         private double _maxSpeed;
         private double speed;
         private double X;
@@ -40,7 +46,7 @@ namespace CarSim
         private Path basicPath; //basic, doesn't use scaling
         private Itinerary itinerary;
 
-        //for drawing turns
+        //for drawing cars in turns
         private CoOrds turnFrom;
         private double turnProgress;
 
@@ -51,14 +57,17 @@ namespace CarSim
         //for handling cars in front and eventually passing them
         public Car inFront;
         private const int safeDistanceMult = 40;
+        //passing
         private bool passing;
+        private int passingPhase;
         public bool beingPassed;
+        private Car passCar;
 
         public Path path{
             get{return basicPath;}
             set{
                 basicPath = value;
-                MakeItinerary();
+                itinerary = MakeItinerary();
                 X=_coords.x; Y=_coords.y;
             }
         }
@@ -83,7 +92,7 @@ namespace CarSim
             this.itinerary = itinerary;
         }
 
-        public void MakeItinerary(){
+        public Itinerary MakeItinerary(){
             //ToDo: make it real
             _coords = path.route[0].from.Multiply(TILESIZE).Add(directionOffset(path.route[0].direction,true));
             _direction = path.route[0].direction*3;
@@ -116,10 +125,11 @@ namespace CarSim
                                                                                 CoOrds.oppDir(path.route[i-1].direction),
                                                                                 path.route[i].direction
                                                                                )));
+                } else {
+                    qu.Enqueue(itPart);
                 }
-                qu.Enqueue(itPart);
             }
-            itinerary = new Itinerary(qu);
+            return new Itinerary(qu);
         }
 
         private CoOrds directionOffset(int dir, bool afterCrossroad){
@@ -152,10 +162,6 @@ namespace CarSim
             }
         }
 
-        private void updateCarInFront(){
-            //ToDo:
-        }
-
         public bool Tick(){ //returns true if car has reached its destination
             //calculate distances
             ItinPart cur = itinerary.route.First();
@@ -186,137 +192,189 @@ namespace CarSim
                 waitingForAllow = !cross.CanGo(this,curDir,toDir);
             }
             #endregion
-            if (waitingForAllow){
-                //waiting for crossroad to clear way, stop at current destination
-                double t=2*dist/speed;
-                t = t < 1 ? 1 : t;
-                speed -= speed/t;
-            } else if (next.isTurn() && dist < 50*speed) {
-                //close to a turn, slow down to turning speed at current destination
-                double maxTSpeed = next.type == ItinType.TurnLeftTo ? maxLTurnSpeed : maxRTurnSpeed;
-                if (speed > maxTSpeed){
-                    double t=2*dist/(maxTSpeed+speed);
+            #region if passing
+            if (passing){
+                if(passingPhase < 16){
+                    if(passingPhase % 4 == 0){
+                        CoOrds dir = CoOrds.fromDir( CoOrds.toRightDir(direction/3) );
+                        addToCoords(dir);
+                        cur.dest = cur.dest.Add(dir);
+                    }
+                    passingPhase++;
+                } else if (passingPhase < 17){
+                    //drive in front of passCar
+                    int inFrontNeeded = (int)Math.Round(passCar.speed*safeDistanceMult+10);
+                    int diff;
+                    switch (direction/3){
+                        case 0:
+                            diff = passCar.coords.x - coords.x; break;
+                        case 1:
+                            diff = passCar.coords.y - coords.y; break;
+                        case 2:
+                            diff = coords.x - passCar.coords.x; break;
+                        case 3:
+                            diff = coords.y - passCar.coords.y; break;
+                        default:
+                            diff = 7777; break;
+                    }
+                    if(diff < -inFrontNeeded){
+                        passingPhase++;
+                    }
+                } else if (passingPhase < 33){
+                    if(passingPhase % 4 == 0){
+                        CoOrds dir = CoOrds.fromDir( CoOrds.toLeftDir(direction/3) );
+                        addToCoords(dir);
+                        cur.dest = cur.dest.Add(dir);
+                    }
+                    passingPhase++;
+                } else {
+                    //end passing
+                    passing = false;
+                    Car justPassed = inFront;
+                    inFront = justPassed.inFront;
+                    justPassed.inFront = this;
+                }
+                speed += accel;
+                speed = speed > maxSpeed ? maxSpeed : speed;
+                X += speed*Math.Sign(distX);
+                Y += speed*Math.Sign(distY);
+            #endregion
+            #region if not passing
+            } else {
+                if (waitingForAllow){
+                    //waiting for crossroad to clear way, stop at current destination
+                    double t=2*dist/speed;
                     t = t < 1 ? 1 : t;
-                    speed -= (speed-maxTSpeed)/t;
+                    speed -= speed/t;
+                } else if (next.isTurn() && dist < 50*speed) {
+                    //close to a turn, slow down to turning speed at current destination
+                    double maxTSpeed = next.type == ItinType.TurnLeftTo ? maxLTurnSpeed : maxRTurnSpeed;
+                    if (speed > maxTSpeed){
+                        double t=2*dist/(maxTSpeed+speed);
+                        t = t < 1 ? 1 : t;
+                        speed -= (speed-maxTSpeed)/t;
+                    } else {
+                        speed = speed + accel;
+                        speed = speed > maxTSpeed ? maxTSpeed : speed;
+                    }
+                } else if ((itinerary.route.Count <= 1) && dist < 50*speed){ //should be 1
+                    //close to a final depot, stop at current destination
+                    double t=2*dist/speed;
+                    t = t < 1 ? 1 : t;
+                    speed -= speed/t;
+                    speed = speed < 0.01 ? 0.01 : speed; //keep at least minimum speed to actually reach destination
                 } else {
                     speed = speed + accel;
-                    speed = speed > maxTSpeed ? maxTSpeed : speed;
                 }
-            } else if ((itinerary.route.Count <= 1) && dist < 50*speed){ //should be 1
-                //close to a final depot, stop at current destination
-                double t=2*dist/speed;
-                t = t < 1 ? 1 : t;
-                speed -= speed/t;
-                speed = speed < 0.01 ? 0.01 : speed; //keep at least minimum speed to actually reach destination
-            } else {
-                speed = speed + accel;
-            }
-            speed = speed > maxSpeed ? maxSpeed : speed;
-            //ToDo:Passing
-            if((inFront != null) && (coords.Distance(inFront.coords) < 10+safeDistanceMult*speed)){
-                if(canPass()){
-
-                } else {
-                    speed -= 5*accel;
-                    speed = speed < 0 ? 0 : speed;
+                speed = speed > maxSpeed ? maxSpeed : speed;
+                //ToDo:Passing
+                if((inFront != null) && (coords.Distance(inFront.coords) < 10+safeDistanceMult*speed)){
+                    if(canPass()){
+                        //initiate passing
+                        //ToDo: alert all cars they are being passed
+                        passing = true;
+                        passingPhase = 0;
+                        passCar = inFront;
+                    } else {
+                        speed -= 5*accel;
+                        speed = speed < 0 ? 0 : speed;
+                    }
                 }
-            }
             #endregion
-            #region follow path
-            double distToTravel = speed;
-            while(distToTravel > dist){
-                //all encountering roads code here
-                if(itinerary.route.Count <= 1){
-                    
-                    //ToDo: Say the other car Im not the issue here
-                    List<Car> qu = cross.incomCars[CoOrds.oppDir(direction/3)];
-                    qu.Remove(this);
-                    if(qu.Count > 0) {qu.First().inFront = null;}
-                    return true; //end of path
-                }
-                distToTravel -= dist;
-                if (cur.type == ItinType.AskCrossroad){
-                    //cross = (Crossroad)objmap[cur.dest.x, cur.dest.y];
-                    waitingForAllow = true;
-                } else if (cur.type == ItinType.EnterCrossroad) {
-                    //Dequeue from crosses queue and enqueue into next one.
-                    cross.incomCars[cur.dest.x].Remove(this);
-                    MapItem newCross = cross.connObjs[cur.dest.y];
-                    inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
-                    newCross.incomCars[newCross.getDirOf(cross)].Add(this);
-                    cross = newCross;
-                    //ToDo: Maybe recount remaining speed and act accordingly
+            #endregion
+                #region follow path
+                double distToTravel = speed;
+                while(distToTravel > dist){
+                    //all encountering roads code here
+                    if(itinerary.route.Count <= 1){
+                        List<Car> qu = cross.incomCars[CoOrds.oppDir(direction/3)];
+                        qu.Remove(this);
+                        if(qu.Count > 0) {qu.First().inFront = null;}
+                        return true; //end of path
+                    }
+                    distToTravel -= dist;
+                    if (cur.type == ItinType.AskCrossroad){
+                        //cross = (Crossroad)objmap[cur.dest.x, cur.dest.y];
+                        waitingForAllow = true;
+                    } else if (cur.type == ItinType.EnterCrossroad) {
+                        //Dequeue from crosses queue and enqueue into next one.
+                        cross.incomCars[cur.dest.x].Remove(this);
+                        MapItem newCross = cross.connObjs[cur.dest.y];
+                        inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
+                        newCross.incomCars[newCross.getDirOf(cross)].Add(this);
+                        cross = newCross;
 
-                } else {
-                    X = cur.dest.x; Y = cur.dest.y;
-                }
-                itinerary.route.Dequeue();
-                cur = itinerary.route.First();
-                if( cur.isTurn() ){
-                    turnFrom = new CoOrds((int)Math.Round(X), (int)Math.Round(Y));
-                    turnProgress = 0;
-                    getDist(cur, out distX, out distY, out dist);
-                } else {
-                    getDist(cur, out distX, out distY, out dist);
-                    _direction = new CoOrds(Math.Sign(distX),Math.Sign(distY)).toDir()*3;
-                }
-            }
-            if(cur.type == ItinType.GoTo){
-                X += distToTravel*Math.Sign(distX);
-                Y += distToTravel*Math.Sign(distY);
-            } else if (cur.type == ItinType.TurnLeftTo || cur.type == ItinType.TurnRightTo){
-                #region turning
-                //dont forget - change direction
-                //quarter turn starts at turnFrom, ends at cur.dest, is in way of cur.type
-                double rad = Math.Abs(cur.dest.x-turnFrom.x);
-                double turnSize = (Math.PI/2)*rad; //ToDo: 15 on Left????
-                //what part are we travelling
-                turnProgress += distToTravel/turnSize; //should still be <1
-                int frameTurn = (int)Math.Round(turnProgress*3); //which step of animation are we in
-                if (cur.type == ItinType.TurnLeftTo){
-                    double angle = turnProgress/2*Math.PI;
-                    if((turnFrom.x < cur.dest.x) && (turnFrom.y < cur.dest.y)){ //RD
-                        X = cur.dest.x - (Math.Cos(angle) * rad);
-                        Y = turnFrom.y + (Math.Sin(angle) * rad);
-                        _direction = 3 - frameTurn;
-                    } else if ((turnFrom.x > cur.dest.x) && (turnFrom.y < cur.dest.y)){ //LD
-                        X = turnFrom.x - (Math.Sin(angle) * rad);
-                        Y = cur.dest.y - (Math.Cos(angle) * rad);
-                        _direction = 6 - frameTurn;
-                    } else if ((turnFrom.x < cur.dest.x) && (turnFrom.y > cur.dest.y)){ //RU
-                        X = turnFrom.x + (Math.Sin(angle) * rad);
-                        Y = cur.dest.y + (Math.Cos(angle) * rad);
-                        _direction = 12 - frameTurn;
-                    } else { //LU
-                        X = cur.dest.x + (Math.Cos(angle) * rad);
-                        Y = turnFrom.y - (Math.Sin(angle) * rad);
-                        _direction = 9 - frameTurn;
+                    } else {
+                        X = cur.dest.x; Y = cur.dest.y;
                     }
-                } else {
-                    //right turns
-                    double angle = turnProgress/2*Math.PI;
-                    if((turnFrom.x < cur.dest.x) && (turnFrom.y < cur.dest.y)){ //RD
-                        X = turnFrom.x + (Math.Sin(angle) * rad);
-                        Y = cur.dest.y - (Math.Cos(angle) * rad);
-                        _direction = 0 + frameTurn;
-                    } else if ((turnFrom.x > cur.dest.x) && (turnFrom.y < cur.dest.y)){ //LD
-                        X = cur.dest.x + (Math.Cos(angle) * rad);
-                        Y = turnFrom.y + (Math.Sin(angle) * rad);
-                        _direction = 3 + frameTurn;
-                    } else if ((turnFrom.x < cur.dest.x) && (turnFrom.y > cur.dest.y)){ //RU
-                        X = cur.dest.x - (Math.Cos(angle) * rad);
-                        Y = turnFrom.y - (Math.Sin(angle) * rad);
-                        _direction = 9 + frameTurn;
-                    } else { //LU
-                        X = turnFrom.x - (Math.Sin(angle) * rad);
-                        Y = cur.dest.y + (Math.Cos(angle) * rad);
-                        _direction = 6 + frameTurn;
+                    itinerary.route.Dequeue();
+                    cur = itinerary.route.First();
+                    if( cur.isTurn() ){
+                        turnFrom = new CoOrds((int)Math.Round(X), (int)Math.Round(Y));
+                        turnProgress = 0;
+                        getDist(cur, out distX, out distY, out dist);
+                    } else {
+                        getDist(cur, out distX, out distY, out dist);
+                        _direction = new CoOrds(Math.Sign(distX),Math.Sign(distY)).toDir()*3;
                     }
+                }
+                if(cur.type == ItinType.GoTo){
+                    X += distToTravel*Math.Sign(distX);
+                    Y += distToTravel*Math.Sign(distY);
+                } else if (cur.type == ItinType.TurnLeftTo || cur.type == ItinType.TurnRightTo){
+                    #region turning
+                    //dont forget - change direction
+                    //quarter turn starts at turnFrom, ends at cur.dest, is in way of cur.type
+                    double rad = Math.Abs(cur.dest.x-turnFrom.x);
+                    double turnSize = (Math.PI/2)*rad; //ToDo: 15 on Left????
+                    //what part are we travelling
+                    turnProgress += distToTravel/turnSize; //should still be <1
+                    int frameTurn = (int)Math.Round(turnProgress*3); //which step of animation are we in
+                    if (cur.type == ItinType.TurnLeftTo){
+                        double angle = turnProgress/2*Math.PI;
+                        if((turnFrom.x < cur.dest.x) && (turnFrom.y < cur.dest.y)){ //RD
+                            X = cur.dest.x - (Math.Cos(angle) * rad);
+                            Y = turnFrom.y + (Math.Sin(angle) * rad);
+                            _direction = 3 - frameTurn;
+                        } else if ((turnFrom.x > cur.dest.x) && (turnFrom.y < cur.dest.y)){ //LD
+                            X = turnFrom.x - (Math.Sin(angle) * rad);
+                            Y = cur.dest.y - (Math.Cos(angle) * rad);
+                            _direction = 6 - frameTurn;
+                        } else if ((turnFrom.x < cur.dest.x) && (turnFrom.y > cur.dest.y)){ //RU
+                            X = turnFrom.x + (Math.Sin(angle) * rad);
+                            Y = cur.dest.y + (Math.Cos(angle) * rad);
+                            _direction = 12 - frameTurn;
+                        } else { //LU
+                            X = cur.dest.x + (Math.Cos(angle) * rad);
+                            Y = turnFrom.y - (Math.Sin(angle) * rad);
+                            _direction = 9 - frameTurn;
+                        }
+                    } else {
+                        //right turns
+                        double angle = turnProgress/2*Math.PI;
+                        if((turnFrom.x < cur.dest.x) && (turnFrom.y < cur.dest.y)){ //RD
+                            X = turnFrom.x + (Math.Sin(angle) * rad);
+                            Y = cur.dest.y - (Math.Cos(angle) * rad);
+                            _direction = 0 + frameTurn;
+                        } else if ((turnFrom.x > cur.dest.x) && (turnFrom.y < cur.dest.y)){ //LD
+                            X = cur.dest.x + (Math.Cos(angle) * rad);
+                            Y = turnFrom.y + (Math.Sin(angle) * rad);
+                            _direction = 3 + frameTurn;
+                        } else if ((turnFrom.x < cur.dest.x) && (turnFrom.y > cur.dest.y)){ //RU
+                            X = cur.dest.x - (Math.Cos(angle) * rad);
+                            Y = turnFrom.y - (Math.Sin(angle) * rad);
+                            _direction = 9 + frameTurn;
+                        } else { //LU
+                            X = turnFrom.x - (Math.Sin(angle) * rad);
+                            Y = cur.dest.y + (Math.Cos(angle) * rad);
+                            _direction = 6 + frameTurn;
+                        }
+                    }
+                    #endregion
                 }
                 #endregion
             }
             _coords = new CoOrds((int)X,(int)Y);
-            #endregion
             return false;
         }
 
@@ -341,6 +399,45 @@ namespace CarSim
         }
 
         private bool canPass(){
+            if(itinerary.route.First().type == ItinType.GoTo){
+                #region figure out how many cars to pass and how long of a stretch we need
+                Car passCar = inFront;
+                while((passCar.inFront != null) &&
+                    (passCar.coords.Distance(passCar.inFront.coords) < inFront.speed*safeDistanceMult+30)){
+                    passCar = passCar.inFront;
+                }
+                int inFrontNeeded = (int)Math.Round(passCar.speed*safeDistanceMult+10);
+                //relative distance and speed between me and where i am supposed to be after passing
+                double relDist = passCar.coords.Add(CoOrds.fromDir(passCar.direction/3).Multiply(inFrontNeeded)).Distance(coords);
+                double relSpeed = speed - passCar.speed;
+                double relMaxSpeed = maxSpeed - passCar.maxSpeed;
+
+                double tToSpeed = (maxSpeed-speed)/accel;
+                double reldToSpeed = (relSpeed+(maxSpeed-speed)/2)*tToSpeed;
+                double dToSpeed = (maxSpeed+speed)/2*tToSpeed;
+
+                if(reldToSpeed <= relDist){
+                    //all cool, calculate rest of the speeds
+                    tToSpeed = (relDist-dToSpeed)/relMaxSpeed;
+                    dToSpeed += maxSpeed*tToSpeed;
+                    
+                    dToSpeed += maxSpeed*16; //it takes 16 ticks to get back to own lane
+                } else {
+                    //troublesome, need to solve a quadratic equation
+                    double devNull;
+                    CustomMath.solveQuadraticEquation(accel, speed, -relDist, out tToSpeed, out devNull);
+                    dToSpeed = (speed+maxSpeed)/2*tToSpeed;
+
+                    dToSpeed += 16*maxSpeed; //it takes 16 ticks to get back to own lane
+                }
+                #endregion
+                //set values: dToSpeed - distance in pixels needed to pass car
+                if(itinerary.route.First().dest.Distance(this.coords) < dToSpeed){
+                    return false;
+                }
+                return true;
+                //ToDo: Account cars driving towards you
+            }
             return false;
         }
 

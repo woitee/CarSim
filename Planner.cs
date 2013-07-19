@@ -116,10 +116,12 @@ namespace CarSim
                 for (int i = 0; i < 4; i++){
                     MapItem other = cur.connObjs[i];
                     if (!(other == null) && !been[other.coords.x, other.coords.y]){
-                        qu.Enqueue(other);
-                        dist[other.coords.x, other.coords.y] = 1 + dist[cur.coords.x,cur.coords.y];
-                        if(other == dptTo){ breaking = true; break; }
-                        been[other.coords.x, other.coords.y] = true;
+                        if((other == dptTo) || other as Crossroad != null){
+                            dist[other.coords.x, other.coords.y] = 1 + dist[cur.coords.x,cur.coords.y];
+                            if(other == dptTo){ breaking = true; break; }
+                            been[other.coords.x, other.coords.y] = true;
+                            qu.Enqueue(other);
+                        }
                     }
                 }
                 if(breaking) {break;}

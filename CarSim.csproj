@@ -47,6 +47,7 @@
     <Compile Include="Car.cs" />
     <Compile Include="CoOrds.cs" />
     <Compile Include="Crossroad.cs" />
+    <Compile Include="CustomMath.cs" />
     <Compile Include="Depot.cs" />
     <Compile Include="Drawer.cs" />
     <Compile Include="FPSCounter.cs" />
