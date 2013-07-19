@@ -18,6 +18,7 @@ namespace CarSim
         public override bool CanGo(Car car, int dirFrom, int dirTo){
             int toRight = CoOrds.toRightDir(dirFrom);
             int toLeft = CoOrds.toLeftDir(dirFrom);
+            int oppDir = CoOrds.oppDir(dirFrom);
 
             if(lastPassed.coords.Distance(this.dispCoords) > 11){
                 if(toRight == dirTo){
@@ -25,7 +26,7 @@ namespace CarSim
                     return true;
                 }
                 if(nearestCar(toRight) > 80){
-                    if(toLeft != dirTo || nearestCar(toLeft) > 80){
+                    if(toLeft != dirTo || nearestCar(oppDir) > 80){
                         lastPassed = car;
                         return true;   
                     }

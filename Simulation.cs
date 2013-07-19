@@ -61,9 +61,11 @@ namespace CarSim
         public void Tick(out Bitmap carsBitmap){
             activeCars.RemoveAll(car => car.Tick()); //main simulation step hidden here
             while ((carStarts.Length > nextCar) && (carStarts[nextCar] <= time)){ //insert new cars
+                
                 Car car = cars[nextCar++].Clone();
                 MapItem srcDepot = objmap[car.from.x, car.from.y];
                 MapItem mi = srcDepot.connObjs[car.direction/3];
+                car.inFront = mi.incomCars[ mi.getDirOf(srcDepot) ].LastOrDefault();
                 car.cross = mi; mi.incomCars[ mi.getDirOf(srcDepot) ].Add(car);
                 
                 activeCars.Add(car);

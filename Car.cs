@@ -48,7 +48,11 @@ namespace CarSim
         private bool waitingForAllow = false;
         public MapItem cross;
 
-        //for handling crossroad queues of car driving in
+        //for handling cars in front and eventually passing them
+        public Car inFront;
+        private const int safeDistanceMult = 40;
+        private bool passing;
+        public bool beingPassed;
 
         public Path path{
             get{return basicPath;}
@@ -148,6 +152,10 @@ namespace CarSim
             }
         }
 
+        private void updateCarInFront(){
+            //ToDo:
+        }
+
         public bool Tick(){ //returns true if car has reached its destination
             //calculate distances
             ItinPart cur = itinerary.route.First();
@@ -183,7 +191,7 @@ namespace CarSim
                 double t=2*dist/speed;
                 t = t < 1 ? 1 : t;
                 speed -= speed/t;
-            } else if (next.isTurn() && dist < 50) {
+            } else if (next.isTurn() && dist < 50*speed) {
                 //close to a turn, slow down to turning speed at current destination
                 double maxTSpeed = next.type == ItinType.TurnLeftTo ? maxLTurnSpeed : maxRTurnSpeed;
                 if (speed > maxTSpeed){
@@ -194,7 +202,7 @@ namespace CarSim
                     speed = speed + accel;
                     speed = speed > maxTSpeed ? maxTSpeed : speed;
                 }
-            } else if ((itinerary.route.Count <= 1) && dist < 50){ //should be 1
+            } else if ((itinerary.route.Count <= 1) && dist < 50*speed){ //should be 1
                 //close to a final depot, stop at current destination
                 double t=2*dist/speed;
                 t = t < 1 ? 1 : t;
@@ -202,7 +210,16 @@ namespace CarSim
                 speed = speed < 0.01 ? 0.01 : speed; //keep at least minimum speed to actually reach destination
             } else {
                 speed = speed + accel;
-                speed = speed > maxSpeed ? maxSpeed : speed;
+            }
+            speed = speed > maxSpeed ? maxSpeed : speed;
+            //ToDo:Passing
+            if((inFront != null) && (coords.Distance(inFront.coords) < 10+safeDistanceMult*speed)){
+                if(canPass()){
+
+                } else {
+                    speed -= 5*accel;
+                    speed = speed < 0 ? 0 : speed;
+                }
             }
             #endregion
             #region follow path
@@ -210,6 +227,11 @@ namespace CarSim
             while(distToTravel > dist){
                 //all encountering roads code here
                 if(itinerary.route.Count <= 1){
+                    
+                    //ToDo: Say the other car Im not the issue here
+                    List<Car> qu = cross.incomCars[CoOrds.oppDir(direction/3)];
+                    qu.Remove(this);
+                    if(qu.Count > 0) {qu.First().inFront = null;}
                     return true; //end of path
                 }
                 distToTravel -= dist;
@@ -217,10 +239,12 @@ namespace CarSim
                     //cross = (Crossroad)objmap[cur.dest.x, cur.dest.y];
                     waitingForAllow = true;
                 } else if (cur.type == ItinType.EnterCrossroad) {
-                    //ToDo: Dequeue from crosses queue and enqueue into next one.
+                    //Dequeue from crosses queue and enqueue into next one.
                     cross.incomCars[cur.dest.x].Remove(this);
                     MapItem newCross = cross.connObjs[cur.dest.y];
+                    inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
                     newCross.incomCars[newCross.getDirOf(cross)].Add(this);
+                    cross = newCross;
                     //ToDo: Maybe recount remaining speed and act accordingly
 
                 } else {
@@ -314,6 +338,10 @@ namespace CarSim
                     distX = 0; distY = 0; totalDist = 0;
                     return;
             }
+        }
+
+        private bool canPass(){
+            return false;
         }
 
         public Car Clone(){
