@@ -66,7 +66,8 @@ namespace CarSim
                 MapItem srcDepot = objmap[car.from.x, car.from.y];
                 MapItem mi = srcDepot.connObjs[car.direction/3];
                 car.inFront = mi.incomCars[ mi.getDirOf(srcDepot) ].LastOrDefault();
-                car.cross = mi; mi.incomCars[ mi.getDirOf(srcDepot) ].Add(car);
+                car.setCross(mi, mi.getDirOf(srcDepot) );
+                mi.incomCars[ mi.getDirOf(srcDepot) ].Add(car);
                 
                 activeCars.Add(car);
             }

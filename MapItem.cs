@@ -48,7 +48,20 @@ namespace CarSim
             //resets car queues
             incomCars = new List<Car>[4] {new List<Car>(),new List<Car>(),new List<Car>(),new List<Car>()};
         }
-        
+        public void putCarInFrontOf(int dirFrom, Car car1, Car car2){
+            //This could be done better, but probably not with this interface with List.
+            incomCars[dirFrom].Remove(car1);
+            int i = incomCars[dirFrom].IndexOf(car2);
+            incomCars[dirFrom].Insert(i,car1);
+        }
+        public Car getCarBehind(int dirFrom, Car car){
+            int i = incomCars[dirFrom].IndexOf(car);
+            if (incomCars[dirFrom].Count > i+1 ){
+                return incomCars[dirFrom][i+1];
+            }
+            return null;
+        }
+
         public abstract bool CanGo(Car car, int dirFrom, int dirTo);
     }
 }

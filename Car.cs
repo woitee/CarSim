@@ -43,6 +43,10 @@ namespace CarSim
         private double X;
         private double Y;
 
+        //some statistics
+        private int timeAlive = 0;
+        private double totalDistTravelled = 0;
+
         private Path basicPath; //basic, doesn't use scaling
         private Itinerary itinerary;
 
@@ -52,7 +56,14 @@ namespace CarSim
 
         //for handling crossroads
         private bool waitingForAllow = false;
-        public MapItem cross;
+        private MapItem _cross;
+        public MapItem cross{
+            get{ return _cross; }
+        }
+        public void setCross(MapItem cross, int crossComingFrom){
+            _cross = cross; this.crossComingFrom = crossComingFrom;
+        }
+        private int crossComingFrom; //the road we are coming to cross
 
         //for handling cars in front and eventually passing them
         public Car inFront;
@@ -172,7 +183,7 @@ namespace CarSim
             #region figure out what speed
             #region maybe ask crossroad if i should go
             if (waitingForAllow){
-                int curDir = CoOrds.oppDir(direction/3);
+                int curDir = crossComingFrom;
                 int toDir = -1; //errorCode
                 switch (next.type){
                     case ItinType.GoTo:
@@ -195,14 +206,15 @@ namespace CarSim
             #region if passing
             if (passing){
                 if(passingPhase < 16){
+                    //First part of three.
                     if(passingPhase % 4 == 0){
                         CoOrds dir = CoOrds.fromDir( CoOrds.toRightDir(direction/3) );
                         addToCoords(dir);
                         cur.dest = cur.dest.Add(dir);
                     }
                     passingPhase++;
-                } else if (passingPhase < 17){
-                    //drive in front of passCar
+                } else if (passingPhase == 16){
+                    //Second part of three.
                     int inFrontNeeded = (int)Math.Round(passCar.speed*safeDistanceMult+10);
                     int diff;
                     switch (direction/3){
@@ -221,6 +233,7 @@ namespace CarSim
                         passingPhase++;
                     }
                 } else if (passingPhase < 33){
+                    //Third part of three.
                     if(passingPhase % 4 == 0){
                         CoOrds dir = CoOrds.fromDir( CoOrds.toLeftDir(direction/3) );
                         addToCoords(dir);
@@ -230,18 +243,29 @@ namespace CarSim
                 } else {
                     //end passing
                     passing = false;
-                    Car justPassed = inFront;
-                    inFront = justPassed.inFront;
-                    justPassed.inFront = this;
+                    inFront = passCar.inFront;
+                    passCar.inFront = this;
+                    passCar.beingPassed = false;
                 }
-                speed += accel;
+                //drive accordingly
+                if(passingPhase <= 16){
+                    speed += accel;
+                } else {
+                    Car frontFront = passCar.inFront;
+                    if ((frontFront != null) && (coords.Distance(frontFront.coords) < 10+safeDistanceMult*speed)){
+                        speed -= 5*accel;
+                        speed = speed < 0 ? 0 : speed;
+                    }
+                }
                 speed = speed > maxSpeed ? maxSpeed : speed;
                 X += speed*Math.Sign(distX);
                 Y += speed*Math.Sign(distY);
             #endregion
             #region if not passing
-            } else {
-                if (waitingForAllow){
+            } else { //dont convert this to an else if
+                if (beingPassed) {
+                    //actually, do nothing
+                } else if (waitingForAllow){
                     //waiting for crossroad to clear way, stop at current destination
                     double t=2*dist/speed;
                     t = t < 1 ? 1 : t;
@@ -267,21 +291,26 @@ namespace CarSim
                     speed = speed + accel;
                 }
                 speed = speed > maxSpeed ? maxSpeed : speed;
-                //ToDo:Passing
                 if((inFront != null) && (coords.Distance(inFront.coords) < 10+safeDistanceMult*speed)){
                     if(canPass()){
                         //initiate passing
-                        //ToDo: alert all cars they are being passed
+                        passCar.beingPassed = true;
                         passing = true;
                         passingPhase = 0;
-                        passCar = inFront;
+                        Car behind = cross.getCarBehind( crossComingFrom, this );
+                        if(behind != null){
+                            behind.inFront = passCar;
+                        }
+                        //swap these even in crossroad lists
+                        //ToDo: direction/3 is wrong here
+                        cross.putCarInFrontOf(crossComingFrom, this, passCar);
                     } else {
                         speed -= 5*accel;
                         speed = speed < 0 ? 0 : speed;
                     }
                 }
-            #endregion
-            #endregion
+                #endregion
+                #endregion
                 #region follow path
                 double distToTravel = speed;
                 while(distToTravel > dist){
@@ -302,8 +331,7 @@ namespace CarSim
                         MapItem newCross = cross.connObjs[cur.dest.y];
                         inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
                         newCross.incomCars[newCross.getDirOf(cross)].Add(this);
-                        cross = newCross;
-
+                        setCross(newCross, newCross.getDirOf(cross));
                     } else {
                         X = cur.dest.x; Y = cur.dest.y;
                     }
@@ -375,6 +403,7 @@ namespace CarSim
                 #endregion
             }
             _coords = new CoOrds((int)X,(int)Y);
+            timeAlive++; totalDistTravelled += speed;
             return false;
         }
 
@@ -398,19 +427,42 @@ namespace CarSim
             }
         }
 
-        private bool canPass(){
+        /// <summary>
+        /// Function counting if the car/cars in front of this car are passable. Sets variable passCar in progress.
+        /// </summary>
+        /// <returns>True if passing can be initiated.</returns>
+        /*private bool canPass(bool boo = true){ //FOR DEBUGGING
+            if(boo && canPass(false)){
+                int abc = 5; //PUT BREAKPOINT HERE, WILL BREAK ONLY IF RESULT IS TRUE
+            }
+        */private bool canPass(){
+            if(passing || beingPassed || (totalDistTravelled < 32)){ return false; }
+            passCar = inFront;
             if(itinerary.route.First().type == ItinType.GoTo){
                 #region figure out how many cars to pass and how long of a stretch we need
-                Car passCar = inFront;
+                bool goOn = false;
+                do{
+                    if ( !passCar.itinerary.route.First().dest.Equals( itinerary.route.First().dest) ||
+                        passCar.beingPassed || passCar.passing ) { return false; }
+                    if ((passCar.inFront != null) &&
+                        (passCar.coords.Distance(passCar.inFront.coords) < inFront.speed*safeDistanceMult+30)){
+                        passCar = passCar.inFront;
+                        goOn = true;
+                    } else {
+                        goOn = false;
+                    }
+                } while (goOn);
                 while((passCar.inFront != null) &&
                     (passCar.coords.Distance(passCar.inFront.coords) < inFront.speed*safeDistanceMult+30)){
+                    if (!passCar.inFront.itinerary.route.First().dest.Equals( itinerary.route.First().dest ) || 
+                        passCar.beingPassed) {return false;}
                     passCar = passCar.inFront;
                 }
                 int inFrontNeeded = (int)Math.Round(passCar.speed*safeDistanceMult+10);
                 //relative distance and speed between me and where i am supposed to be after passing
                 double relDist = passCar.coords.Add(CoOrds.fromDir(passCar.direction/3).Multiply(inFrontNeeded)).Distance(coords);
                 double relSpeed = speed - passCar.speed;
-                double relMaxSpeed = maxSpeed - passCar.maxSpeed;
+                double relMaxSpeed = maxSpeed - passCar.speed;
 
                 double tToSpeed = (maxSpeed-speed)/accel;
                 double reldToSpeed = (relSpeed+(maxSpeed-speed)/2)*tToSpeed;
@@ -418,20 +470,18 @@ namespace CarSim
 
                 if(reldToSpeed <= relDist){
                     //all cool, calculate rest of the speeds
-                    tToSpeed = (relDist-dToSpeed)/relMaxSpeed;
+                    tToSpeed = (relDist-reldToSpeed)/relMaxSpeed;
                     dToSpeed += maxSpeed*tToSpeed;
-                    
-                    dToSpeed += maxSpeed*16; //it takes 16 ticks to get back to own lane
                 } else {
                     //troublesome, need to solve a quadratic equation
                     double devNull;
                     CustomMath.solveQuadraticEquation(accel, speed, -relDist, out tToSpeed, out devNull);
                     dToSpeed = (speed+maxSpeed)/2*tToSpeed;
-
-                    dToSpeed += 16*maxSpeed; //it takes 16 ticks to get back to own lane
                 }
+                dToSpeed += maxSpeed*20; //it takes 16 ticks to get back to own lane
+                // the rest is a reserve for further slowing down
                 #endregion
-                //set values: dToSpeed - distance in pixels needed to pass car
+                //we have set values: dToSpeed - distance in pixels needed to pass car
                 if(itinerary.route.First().dest.Distance(this.coords) < dToSpeed){
                     return false;
                 }
