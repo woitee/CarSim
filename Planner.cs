@@ -102,7 +102,7 @@ namespace CarSim
 
         public Path FindPath(Car car, Depot dptFrom, Depot dptTo){
             //simple BFS for finding paths between depots
-            //ToDo: make it better, actually finding the shortest paths
+            //ToDo: make it Dijkstra
             //ToDo: Remember found roads, so similiar cars can get their Path immediately
             int[,] dist = new int[map.GetLength(0),map.GetLength(1)];
             bool[,] been = new bool[map.GetLength(0),map.GetLength(1)];

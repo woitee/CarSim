@@ -138,12 +138,13 @@ namespace CarSim
                                                                                 CoOrds.oppDir(path.route[i-1].direction),
                                                                                 path.route[i].direction
                                                                                )));
+                    if (path.route[i].type == PathPart.Type.Straight){ continue;}
                     /*if(path.route[i+1].from.Equals(path.route[i+1].to)) {
                         //a crossroad or mapitem immediately following this
                         qu.Enqueue(itPart);
                     }*/
                 } //else {
-                    qu.Enqueue(itPart);
+                qu.Enqueue(itPart);
                 //}
             }
             return new Itinerary(qu);
@@ -308,7 +309,6 @@ namespace CarSim
                             behind.inFront = passCar;
                         }
                         //swap these even in crossroad lists
-                        //ToDo: direction/3 is wrong here
                         cross.putCarInFrontOf(crossComingFrom, this, passCar);
                     } else {
                         speed -= 5*accel;
