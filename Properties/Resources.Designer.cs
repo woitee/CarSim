@@ -73,6 +73,16 @@ namespace CarSim.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Depot {
+            get {
+                object obj = ResourceManager.GetObject("Depot", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Roads {
             get {
                 object obj = ResourceManager.GetObject("Roads", resourceCulture);

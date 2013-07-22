@@ -272,7 +272,7 @@ namespace CarSim
             } else { //dont convert this to an else if
                 if (beingPassed) {
                     //actually, do nothing
-                } else if (waitingForAllow){
+                } else if (waitingForAllow && dist < 50*speed){
                     //waiting for crossroad to clear way, stop at current destination
                     double t=2*dist/speed;
                     t = t < 1 ? 1 : t;

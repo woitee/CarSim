@@ -14,6 +14,7 @@ namespace CarSim
     {
         Simulation sim = new Simulation();
         PictureBox pbCars = new PictureBox();
+        PictureBox pbOverlay = new PictureBox();
 
         public Bitmap CarsImage {
             get {return (Bitmap)pbCars.Image;} //to draw on
@@ -24,14 +25,17 @@ namespace CarSim
             
             //Creating Car layer
             pbCars.Width = pbBackground.Width; pbCars.Height = pbBackground.Height;
-            Bitmap bitmap = new Bitmap(pbCars.Width,pbCars.Height);
-            pbCars.Image = bitmap;
             pbCars.BackColor = Color.Transparent;
             pbCars.Parent = pbBackground;
+            //Creating Overlay layer
+            pbOverlay.Width = pbBackground.Width; pbOverlay.Height = pbBackground.Height;
+            pbOverlay.BackColor = Color.Transparent;
+            pbOverlay.Parent = pbCars;
 
             sim.tracer = new Tracer(infoLabel);
             sim.Load();
             pbBackground.Image = sim.DrawBackground();
+            pbOverlay.Image = sim.DrawSignsAndDepots();
         }
 
 

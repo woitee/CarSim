@@ -26,7 +26,7 @@ namespace CarSim
             for (int i = 0; i < WIDTH; i++){
                 for (int j = 0; j < HEIGHT; j++){
                     switch (map[i,j]) {
-                        case '+':
+                        case 'D': case '+':
                             //count roads around, generate number
                             int code = 0;
                             for (int k = 0; k < 4; k++){
@@ -53,6 +53,15 @@ namespace CarSim
             foreach(Car car in cars){
                 g.DrawImage(Properties.Resources.CarS,car.coords.x,car.coords.y,
                     new Rectangle(car.direction*10,0,10,10),GraphicsUnit.Pixel);
+            }
+            return bmp;
+        }
+    
+        public Bitmap DrawSignsAndDepots(Depot[] depots){
+            Bitmap bmp = new Bitmap(WIDTH*TILESIZE,HEIGHT*TILESIZE);
+            Graphics g = Graphics.FromImage(bmp);
+            for (int i = 0; i < depots.Length; i++){
+                g.DrawImage(Properties.Resources.Depot, depots[i].coords.x*TILESIZE+16, depots[i].coords.y*TILESIZE+16);
             }
             return bmp;
         }
