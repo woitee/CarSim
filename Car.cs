@@ -446,12 +446,12 @@ namespace CarSim
         /// Function counting if the car/cars in front of this car are passable. Sets variable passCar in progress.
         /// </summary>
         /// <returns>True if passing can be initiated.</returns>
-        private bool canPass(bool boo = true){ //FOR DEBUGGING
+        /*private bool canPass(bool boo = true){ //FOR DEBUGGING
             if(boo && canPass(false)){
                 int abc = 5; //PUT BREAKPOINT HERE, WILL BREAK ONLY IF RESULT IS TRUE
             }
-        
-        //private bool canPass(){
+        */
+        private bool canPass(){
             passCar = inFront;
             if(passing || beingPassed || (totalDistTravelled < 32) || (itinerary.route.First().type != ItinType.GoTo)){
                 return false;
@@ -511,47 +511,44 @@ namespace CarSim
                 }
                 
                 //So far all conditions have been met
-                //Account cars driving towards you
-                bool enough = false;
-                while(!enough){
-                    //int i = itinerary.route.Count-1; //should be at least 0
-                    //ItinPart ip = itinerary.route.ElementAt(i--);
-                    MapItem behindCross = cross.connObjs[ crossComingFrom ];
-                    List<Car> list = behindCross.incomCars[ behindCross.getDirOf(cross) ];
-                    int dir = direction/3;
-                    //myCoords are coordinates switched to the other lane
-                    CoOrds myCoords = coords. Subtract ( directionOffset(dir,true) ). Add ( directionOffset( CoOrds.oppDir(dir),false ));
+                #region Consider cars driving towards you
+                //int i = itinerary.route.Count-1; //should be at least 0
+                //ItinPart ip = itinerary.route.ElementAt(i--);
+                MapItem behindCross = cross.connObjs[ crossComingFrom ];
+                List<Car> list = behindCross.incomCars[ behindCross.getDirOf(cross) ];
+                int dir = direction/3;
+                //myCoords are coordinates switched to the other lane
+                CoOrds myCoords = coords. Subtract ( directionOffset(dir,true) ). Add ( directionOffset( CoOrds.oppDir(dir),false ));
 
-                    foreach(Car car in list){
-                        //This loops through cars from first to last
-                        double distFrom = 0;
-                        CoOrds coBefore = car.coords;
-                        bool broke = false;
+                foreach(Car car in list){
+                    //This loops through cars from first to last
+                    double distFrom = 0;
+                    CoOrds coBefore = car.coords;
+                    bool broke = false;
 
-                        foreach(ItinPart itOther in car.itinerary.route){
-                            //Add distance of ItinParts, till you get to the same ItinPart as this
-                            if(itOther.type == ItinType.EnterCrossroad){
-                                break; //the cars cant meet ever
-                            }
-                            CoOrds vec1 = coBefore.Subtract(myCoords);
-                            CoOrds vec2 = myCoords.Subtract(itOther.dest);
-                            if( vec1.Normalize() .Equals (vec2.Normalize()) ){
-                                broke = true; break; //i am between it and its destination
-                            }
-                            distFrom += getDist(itOther, coBefore.x, coBefore.y);
-                            coBefore = itOther.dest;
+                    foreach(ItinPart itOther in car.itinerary.route){
+                        //Add distance of ItinParts, till you get to the same ItinPart as this
+                        if(itOther.type == ItinType.EnterCrossroad){
+                            break; //the cars cant meet ever
                         }
-                        if(broke){
-                            distFrom += coBefore.Distance( myCoords );
-                            //two rough cuts... accelerating all the way
-                            double willTravel = (accel*tToSpeed/2 + speed) * tToSpeed;
-                            if(distFrom < willTravel+dToSpeed){
-                                return false;
-                            }
+                        CoOrds vec1 = coBefore.Subtract(myCoords);
+                        CoOrds vec2 = myCoords.Subtract(itOther.dest);
+                        if( vec1.Normalize() .Equals (vec2.Normalize()) ){
+                            broke = true; break; //i am between it and its destination
+                        }
+                        distFrom += getDist(itOther, coBefore.x, coBefore.y);
+                        coBefore = itOther.dest;
+                    }
+                    if(broke){
+                        distFrom += coBefore.Distance( myCoords );
+                        //two rough cuts... accelerating all the way
+                        double willTravel = (accel*tToSpeed/2 + speed) * tToSpeed;
+                        if(distFrom < willTravel+dToSpeed){
+                            return false;
                         }
                     }
-                    enough = true;
                 }
+                #endregion
                 return true;
             }
         }
