@@ -23,6 +23,24 @@ namespace CarSim
             public CoOrds Multiply(int n){
                 return (new CoOrds (this.x * n, this.y * n));
             }
+            public CoOrds Normalize(){
+                int xx, yy;
+                if (x>0){
+                    xx = 1;
+                } else if(x == 0){
+                    xx = 0;
+                } else {
+                    xx = -1;
+                }
+                if (y>0){
+                    yy = 1;
+                } else if(y == 0){
+                    yy = 0;
+                } else {
+                    yy = -1;
+                }
+                return new CoOrds(xx,yy);
+            }
             public double Distance(){
                 return Math.Sqrt(x*x+y*y);
             }

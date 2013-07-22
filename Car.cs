@@ -333,6 +333,7 @@ namespace CarSim
                         waitingForAllow = true;
                     } else if (cur.type == ItinType.EnterCrossroad) {
                         //Dequeue from crosses queue and enqueue into next one.
+                        ((Crossroad)cross).passBooked = false;
                         cross.incomCars[cur.dest.x].Remove(this);
                         MapItem newCross = cross.connObjs[cur.dest.y];
                         inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
@@ -412,8 +413,16 @@ namespace CarSim
             timeAlive++; totalDistTravelled += speed;
             return false;
         }
-
+        
+        private static double getDist(ItinPart itPart, double X, double Y){
+            double devNull; double totalDist;
+            getDist(itPart, X, Y, 0, out devNull, out devNull, out totalDist);
+            return totalDist;
+        }
         private void getDist(ItinPart itPart, out double distX, out double distY, out double totalDist){
+            getDist(itPart, this.X, this.Y, this.turnProgress, out distX, out distY, out totalDist);
+        }
+        private static void getDist(ItinPart itPart, double X, double Y, double turnProgress, out double distX, out double distY, out double totalDist){
             switch (itPart.type)
             {
                 case ItinType.GoTo:
@@ -437,19 +446,21 @@ namespace CarSim
         /// Function counting if the car/cars in front of this car are passable. Sets variable passCar in progress.
         /// </summary>
         /// <returns>True if passing can be initiated.</returns>
-        /*private bool canPass(bool boo = true){ //FOR DEBUGGING
+        private bool canPass(bool boo = true){ //FOR DEBUGGING
             if(boo && canPass(false)){
                 int abc = 5; //PUT BREAKPOINT HERE, WILL BREAK ONLY IF RESULT IS TRUE
             }
-        */private bool canPass(){
-            if(passing || beingPassed || (totalDistTravelled < 32)){ return false; }
+        
+        //private bool canPass(){
             passCar = inFront;
-            if(itinerary.route.First().type == ItinType.GoTo){
+            if(passing || beingPassed || (totalDistTravelled < 32) || (itinerary.route.First().type != ItinType.GoTo)){
+                return false;
+            } else {
                 #region figure out how many cars to pass and how long of a stretch we need
                 bool goOn = false;
                 do{
                     if ( !passCar.itinerary.route.First().dest.Equals( itinerary.route.First().dest) ||
-                        passCar.beingPassed || passCar.passing ) { return false; }
+                        passCar.beingPassed || passCar.passing || (maxSpeed < passCar.maxSpeed) ) { return false; }
                     if ((passCar.inFront != null) &&
                         (passCar.coords.Distance(passCar.inFront.coords) < inFront.speed*safeDistanceMult+30)){
                         passCar = passCar.inFront;
@@ -478,23 +489,71 @@ namespace CarSim
                     //all cool, calculate rest of the speeds
                     tToSpeed = (relDist-reldToSpeed)/relMaxSpeed;
                     dToSpeed += maxSpeed*tToSpeed;
+                    dToSpeed += maxSpeed*20; //it takes 16 ticks to get back to own lane
                 } else {
                     //troublesome, need to solve a quadratic equation
                     double devNull;
                     CustomMath.solveQuadraticEquation(accel, speed, -relDist, out tToSpeed, out devNull);
                     dToSpeed = (speed+maxSpeed)/2*tToSpeed;
+                    dToSpeed += (speed + accel*tToSpeed)*20; // reserve for further slowing down
                 }
-                dToSpeed += maxSpeed*20; //it takes 16 ticks to get back to own lane
-                // the rest is a reserve for further slowing down
+
+                if ((itinerary.route.Count >= 2) && (itinerary.route.ElementAt(1).type == ItinType.EnterCrossroad || itinerary.route.ElementAt(1).type == ItinType.AskCrossroad)){
+                    //if the following is a crossroad, dont be as hasty
+                    //ToDo: LowPriority: search for the crossroad further in itinerary
+                    dToSpeed *= 1.5;
+                }
+                
                 #endregion
                 //we have set values: dToSpeed - distance in pixels needed to pass car
                 if(itinerary.route.First().dest.Distance(this.coords) < dToSpeed){
                     return false;
                 }
+                
+                //So far all conditions have been met
+                //Account cars driving towards you
+                bool enough = false;
+                while(!enough){
+                    //int i = itinerary.route.Count-1; //should be at least 0
+                    //ItinPart ip = itinerary.route.ElementAt(i--);
+                    MapItem behindCross = cross.connObjs[ crossComingFrom ];
+                    List<Car> list = behindCross.incomCars[ behindCross.getDirOf(cross) ];
+                    int dir = direction/3;
+                    //myCoords are coordinates switched to the other lane
+                    CoOrds myCoords = coords. Subtract ( directionOffset(dir,true) ). Add ( directionOffset( CoOrds.oppDir(dir),false ));
+
+                    foreach(Car car in list){
+                        //This loops through cars from first to last
+                        double distFrom = 0;
+                        CoOrds coBefore = car.coords;
+                        bool broke = false;
+
+                        foreach(ItinPart itOther in car.itinerary.route){
+                            //Add distance of ItinParts, till you get to the same ItinPart as this
+                            if(itOther.type == ItinType.EnterCrossroad){
+                                break; //the cars cant meet ever
+                            }
+                            CoOrds vec1 = coBefore.Subtract(myCoords);
+                            CoOrds vec2 = myCoords.Subtract(itOther.dest);
+                            if( vec1.Normalize() .Equals (vec2.Normalize()) ){
+                                broke = true; break; //i am between it and its destination
+                            }
+                            distFrom += getDist(itOther, coBefore.x, coBefore.y);
+                            coBefore = itOther.dest;
+                        }
+                        if(broke){
+                            distFrom += coBefore.Distance( myCoords );
+                            //two rough cuts... accelerating all the way
+                            double willTravel = (accel*tToSpeed/2 + speed) * tToSpeed;
+                            if(distFrom < willTravel+dToSpeed){
+                                return false;
+                            }
+                        }
+                    }
+                    enough = true;
+                }
                 return true;
-                //ToDo: Account cars driving towards you
             }
-            return false;
         }
 
         public Car Clone(){

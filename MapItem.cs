@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
+    /// <summary>
+    /// An abstract class that Depots and Crossroads derive from.
+    /// </summary>
     abstract class MapItem
     {
         protected CoOrds _coords;
