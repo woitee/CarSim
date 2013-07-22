@@ -23,12 +23,12 @@ namespace CarSim
             if(!passBooked && (lastPassed.coords.Distance(this.dispCoords) > 11)){
                 if(toRight == dirTo){
                     lastPassed = car;
-                    passBooked = false; return true;
+                    passBooked = true; return true;
                 }
                 if(nearestCar(toRight) > 80){
                     if(toLeft != dirTo || nearestCar(oppDir) > 80){
                         lastPassed = car;
-                        passBooked = false; return true;   
+                        passBooked = true; return true;   
                     }
                 }
             }

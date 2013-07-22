@@ -39,7 +39,7 @@ namespace CarSim
             if(incomCars[dirFrom].Count == 0){
                 return double.PositiveInfinity;
             }
-            return incomCars[dirFrom].Last().coords.Distance(dispCoords);
+            return incomCars[dirFrom].First().coords.Distance(dispCoords);
         }
         public int getDirOf(MapItem mapItem){
             for (int i = 0; i < 4; i++){
