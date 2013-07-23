@@ -31,6 +31,15 @@ namespace CarSim
             }
             return pth;
         }
+        public int Length{
+            get{
+                int sum = 0;
+                for (int i = 0; i < route.Length; i++){
+                    sum += route[i].Length;
+                }
+                return sum;
+            }
+        }
     }
 
     public class PathPart
@@ -64,6 +73,12 @@ namespace CarSim
                     return new PathPart(PathPart.Type.TurnL,newDir,from,from.Add(co),crossroad);
                 default: //should never be reached
                     return null;
+            }
+        }
+        public int Length{
+            get{
+                //if(this.to.Equals(this.from)){return 0;}
+                return Math.Abs(this.to.x - this.from.x) + Math.Abs(this.to.y - this.from.y);
             }
         }
     }

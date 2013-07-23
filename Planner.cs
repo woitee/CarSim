@@ -99,54 +99,67 @@ namespace CarSim
             endObj = null; return null;
         }
 
-
         public Path FindPath(Car car, Depot dptFrom, Depot dptTo){
-            //simple BFS for finding paths between depots
-            //ToDo: make it Dijkstra
-            //ToDo: Remember found roads, so similiar cars can get their Path immediately
+            //simple implementation of Dijkstra's algorithm for finding paths between depots
+            List<CoOrds> found = new List<CoOrds>();
+            bool[,] been = new bool[map.GetLength(0), map.GetLength(1)];
             int[,] dist = new int[map.GetLength(0),map.GetLength(1)];
-            bool[,] been = new bool[map.GetLength(0),map.GetLength(1)];
-            Queue<MapItem> qu = new Queue<MapItem>();
-            qu.Enqueue(dptFrom); been[dptFrom.coords.x,dptFrom.coords.y] = true;
-            dist[dptFrom.coords.x, dptFrom.coords.y] = 1;
-            while(qu.Count > 0){
-                bool breaking = false;
-                MapItem cur = qu.Dequeue();
+            CoOrds[,] prev = new CoOrds[map.GetLength(0), map.GetLength(1)];
+            for (int i = 0; i < map.GetLength(0); i++){
+                for (int j = 0; j < map.GetLength(1); j++){
+                    dist[i,j] = int.MaxValue;
+                }
+            }
+            found.Add(dptFrom.coords); dist[dptFrom.coords.x, dptFrom.coords.y] = 0;
+            //initialized
+            while(true){
+                //pick minimum
+                int min = int.MaxValue;
+                CoOrds minCo = new CoOrds();
+                foreach (CoOrds co in found){
+                    if( dist[co.x, co.y] < min ){
+                        min = dist[co.x, co.y];
+                        minCo = co;
+                    }
+                }
+                if (min == int.MaxValue){
+                    //the road does not exist
+                    return null;
+                }
+                if (objmap[minCo.x, minCo.y] == dptTo){
+                    //found target
+                    break;
+                }
+                found.Remove(minCo);
+                been[minCo.x, minCo.y] = true;
                 for (int i = 0; i < 4; i++){
-                    MapItem other = cur.connObjs[i];
-                    if (!(other == null) && !been[other.coords.x, other.coords.y]){
-                        if((other == dptTo) || other as Crossroad != null){
-                            dist[other.coords.x, other.coords.y] = 1 + dist[cur.coords.x,cur.coords.y];
-                            if(other == dptTo){ breaking = true; break; }
-                            been[other.coords.x, other.coords.y] = true;
-                            qu.Enqueue(other);
+                    MapItem next = objmap[minCo.x, minCo.y].connObjs[i];
+                    if(next != null){
+                        if(been[next.coords.x, next.coords.y]) {continue;}
+
+                        if(dist[next.coords.x, next.coords.y] > min + objmap[minCo.x, minCo.y].fromPaths[i].Length){
+                            if(dist[next.coords.x, next.coords.y] == int.MaxValue) {found.Add(next.coords);}
+                            dist[next.coords.x, next.coords.y] = min + objmap[minCo.x, minCo.y].fromPaths[i].Length;
+                            prev[next.coords.x, next.coords.y] = minCo;
                         }
-                    }
+                    }                   
                 }
-                if(breaking) {break;}
             }
-            if(dist[dptTo.coords.x,dptTo.coords.y] == 0){return null;}
-            //path exists
+            //use a Stack to reverse
             Stack<MapItem> st = new Stack<MapItem>();
-            MapItem mi = dptTo;
-            st.Push(mi);
-            int a = dist[mi.coords.x,mi.coords.y];
-            while(a != 1){
-                a--;
-                for (int i = 0; i < 4; i++){
-                    if (!(mi.connObjs[i] == null) && (dist[mi.connObjs[i].coords.x,mi.connObjs[i].coords.y] == a)){
-                        mi = mi.connObjs[i];
-                        st.Push(mi);
-                        break;
-                    }
-                }
-            }
+            CoOrds coo = dptTo.coords;
+            st.Push(dptTo);
+            do{
+                coo = prev[coo.x, coo.y];
+                st.Push(objmap[coo.x, coo.y]);
+            } while (!coo.Equals(dptFrom.coords));
+            //make into whole path
             Path pth = null;
             while(st.Count > 1){
                 MapItem crd = st.Pop();
-                int i;
-                for (i = 0; i < 4; i++){
-                    if( crd.connObjs[i] == st.Peek() ) {break;}
+                int i = -1,j; int min = int.MaxValue;
+                for (j = 0; j < 4; j++){
+                    if(( crd.connObjs[j] == st.Peek() ) && (crd.fromPaths[j].Length < min)) {i=j; min=crd.fromPaths[j].Length;}
                 }
                 if(pth == null){
                     pth = crd.fromPaths[i];
