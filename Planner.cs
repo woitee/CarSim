@@ -134,6 +134,7 @@ namespace CarSim
                 been[minCo.x, minCo.y] = true;
                 for (int i = 0; i < 4; i++){
                     MapItem next = objmap[minCo.x, minCo.y].connObjs[i];
+                    if (next != dptTo) { next = next as Crossroad; }
                     if(next != null){
                         if(been[next.coords.x, next.coords.y]) {continue;}
 

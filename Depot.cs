@@ -14,7 +14,8 @@ namespace CarSim
         }
 
         public override bool CanGo(Car car, int dirFrom, int dirTo){
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return true;
         }
     }
 }

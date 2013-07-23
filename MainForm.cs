@@ -33,9 +33,6 @@ namespace CarSim
             pbOverlay.Parent = pbCars;
 
             sim.tracer = new Tracer(infoLabel);
-            sim.Load();
-            pbBackground.Image = sim.DrawBackground();
-            pbOverlay.Image = sim.DrawSignsAndDepots();
         }
 
 
@@ -48,21 +45,21 @@ namespace CarSim
             FPSlabel.Text = "FPS: "+FPSCounter.Tick();
         }
 
-        private void btnStart_Click(object sender, EventArgs e)
-        {
+        private void loadToolStripMenuItem_Click(object sender, EventArgs e){
+            OpenFileDialog ofDialog = new OpenFileDialog();
+            ofDialog.Filter = "Text Files (.txt)|*.txt|All Files (*.*)|*.*";
+            ofDialog.FilterIndex = 1;
+
+            if (ofDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK){
+                sim.Load(ofDialog.FileName);
+                pbBackground.Image = sim.DrawBackground();
+                pbOverlay.Image = sim.DrawSignsAndDepots();
+            }
+        }
+
+        private void startToolStripMenuItem_Click(object sender, EventArgs e){
             sim.Start();
             mainTimer.Start();
-        }
-
-        private void btnLoad_Click(object sender, EventArgs e)
-        {
-            sim.Load();
-            pbBackground.Image = sim.DrawBackground();
-        }
-
-        private void btnSave_Click(object sender, EventArgs e)
-        {
-            sim.Save();
         }
     }
 }

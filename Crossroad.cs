@@ -16,7 +16,7 @@ namespace CarSim
         public bool passBooked = false;
 
         public override bool CanGo(Car car, int dirFrom, int dirTo){
-            int toRight = CoOrds.toRightDir(dirFrom);
+            /*int toRight = CoOrds.toRightDir(dirFrom);
             int toLeft = CoOrds.toLeftDir(dirFrom);
             int oppDir = CoOrds.oppDir(dirFrom);
 
@@ -29,6 +29,23 @@ namespace CarSim
                     if(toLeft != dirTo || nearestCar(oppDir) > 80){
                         lastPassed = car;
                         passBooked = true; return true;   
+                    }
+                }
+            }
+            return false;*/
+            int toRight = CoOrds.toRightDir(dirFrom);
+            int toLeft = CoOrds.toLeftDir(dirFrom);
+            int oppDir = CoOrds.oppDir(dirFrom);
+
+            if((lastPassed.coords.Distance(this.dispCoords) > 11)){
+                if(toRight == dirTo){
+                    lastPassed = car;
+                    return true;
+                }
+                if(nearestCar(toRight) > 80){
+                    if(toLeft != dirTo || nearestCar(oppDir) > 80){
+                        lastPassed = car;
+                        return true;   
                     }
                 }
             }

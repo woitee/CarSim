@@ -22,6 +22,7 @@ namespace CarSim
         public Tracer(){}
         public Tracer(Label output){
             this.label = output;
+            output.Text = "";
             timer.Interval = 750;
             timer.Tick += timer_Tick;
         }
