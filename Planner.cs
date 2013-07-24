@@ -10,26 +10,20 @@ namespace CarSim
     {
         private char[,] map;
         private MapItem[,] objmap;
+        private Sign[,,] signmap;
 
-        public Planner(char[,] map, MapItem[,] objmap){
+        public Planner(char[,] map, MapItem[,] objmap, Sign[,,] signmap){
             this.map = map;
             this.objmap = objmap;
+            this.signmap = signmap;
         }
 
         public void FindConnections(MapItem mapitem){
             for (int i = 0; i < 4; i++){
-                if(mapitem.connObjs[i] == null) { //if this direction not already set
-                    CoOrds c = mapitem.coords.Add(CoOrds.fromDir(i));
-                    if(c.isValid() && (map[c.x,c.y] == 'D' || map[c.x,c.y] == '+')) {
-                        mapitem.fromPaths[i] = getPath(c, mapitem.coords, out mapitem.connObjs[i]);
-                    }
-                    MapItem other = mapitem.connObjs[i];
-                    if(other != null){ //this should pass or dead end
-                        Path pth = mapitem.fromPaths[i].reverse();
-                        int dir = pth.route[0].direction;
-                        other.connObjs[dir] = mapitem;
-                        other.fromPaths[dir] = pth;
-                    }
+                CoOrds c = mapitem.coords.Add(CoOrds.fromDir(i));
+                if(c.isValid() && (map[c.x,c.y] == 'D' || map[c.x,c.y] == '+')) {
+                    mapitem.fromPaths[i] = getPath(c, mapitem.coords, out mapitem.connObjs[i]);
+                    
                 }
             }
             return;
@@ -44,12 +38,17 @@ namespace CarSim
         /// <returns></returns>
         private Path getPath(CoOrds cur, CoOrds last, out MapItem endObj){
             Queue<PathPart> workPath = new Queue<PathPart>();
-            workPath.Enqueue(new PathPart(PathPart.Type.Straight, cur.Subtract(last).toDir(), cur, cur, false)); //length 0
+            int a;
+            int dir = cur.Subtract(last).toDir();
+            a = getSpeedLimit(cur, dir); //a could be named speedLimitSoFarOnThisRoad, but thats too long
+
+            PathPart pp = new PathPart(PathPart.Type.Straight, dir, cur, cur, false, a);
+            workPath.Enqueue(pp); //length 0
+            
             if(objmap[cur.x,cur.y] != null){
-                int dir = cur.Subtract(last).toDir();
                 Path pth = new Path();
                 pth.route = new PathPart[1];
-                pth.route[0] = new PathPart(PathPart.Type.Straight, dir, cur, cur, false);
+                pth.route[0] = workPath.Dequeue();
                 endObj = objmap[cur.x, cur.y];
                 return pth;
             }
@@ -65,18 +64,33 @@ namespace CarSim
                             //c is next square
                             //build path
                             if (workPath.Count == 0){
-                                workPath.Enqueue(new PathPart(PathPart.Type.Straight, i, cur, c, false));
+                                int b = getSpeedLimit(cur,i);
+                                a = a >= b ? a : b; 
+                                pp = new PathPart(PathPart.Type.Straight, i, cur, c, false,a);
+                                workPath.Enqueue(pp);
                             } else {
                                 PathPart part = workPath.Last();
                                 if(part.direction == i){ //if the road is continuing the same direction as before
-                                    part.to = c;
+                                    int b = getSpeedLimit(cur,i);
+                                    if (b>a){
+                                        a = a >= b ? a : b;
+                                        pp = new PathPart(PathPart.Type.Straight, i, cur, c, false, a);
+                                        workPath.Enqueue(pp);
+                                    } else {
+                                        //nothing strange
+                                        part.to = c;
+                                    }
                                 } else {
                                     if (((i-part.direction) == 1) || ((i-part.direction) == -3)) {
-                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnR, i, cur, c, false)); //1 square long
+                                        int b = getSpeedLimit(cur,part.direction);
+                                        a = a >= b ? a : b; 
+                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnR, i, cur, c, false, a)); //1 square long
                                     } else {
-                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnL, i, cur, c, false)); //1 square long
+                                        int b = getSpeedLimit(cur,part.direction);
+                                        a = a >= b ? a : b; 
+                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnL, i, cur, c, false, a)); //1 square long
                                     }
-                                    workPath.Enqueue(new PathPart(PathPart.Type.Straight, i, c, c, false)); //0 squares long
+                                    workPath.Enqueue(new PathPart(PathPart.Type.Straight, i, c, c, false, -1)); //0 squares long
                                 }
                             }
                             if (objmap[c.x,c.y] == null){
@@ -97,6 +111,20 @@ namespace CarSim
                 }
             } while (goOn);
             endObj = null; return null;
+        }
+
+        private int getSpeedLimit(CoOrds co, int direction){
+            if(signmap[ co.x, co.y, direction ] == null) {return -1;}
+            switch (signmap[ co.x, co.y, direction ].type){
+                case SignType.Max30:
+                    return 30;
+                case SignType.Max60:
+                    return 60;
+                case SignType.Max90:
+                    return 90;
+                default:
+                    return -1;
+            }
         }
 
         public Path FindPath(Car car, Depot dptFrom, Depot dptTo){
@@ -177,7 +205,7 @@ namespace CarSim
                     } else {
                         type = PathPart.Type.TurnL;
                     }
-                    pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true)};
+                    pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true, -1)};
                     pth = pth.Merge(pth2);
                     pth = pth.Merge(crd.fromPaths[i]);
                 }

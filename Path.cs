@@ -12,14 +12,6 @@ namespace CarSim
     class Path
     {
         public PathPart[] route;
-        public Path reverse(){
-            Path pth = new Path();
-            pth.route = new PathPart[route.Length];
-            for (int i = 0; i < route.Length; i++){
-                pth.route[i]=route[route.Length-i-1].reverse();
-            }
-            return pth;
-        }
         public Path Merge(Path other){
             Path pth = new Path();
             pth.route = new PathPart[this.route.Length+other.route.Length];
@@ -50,30 +42,16 @@ namespace CarSim
         public CoOrds from;
         public CoOrds to;
         public bool crossroad;
+        public int speedLimit = -1;
         
-        public PathPart(Type type, int direction, CoOrds from, CoOrds to, bool isCrossroad){
+        public PathPart(Type type, int direction, CoOrds from, CoOrds to, bool isCrossroad,
+            int speedLimit){
             this.type = type;
             this.direction = direction;
             this.from = from;
             this.to = to;
             crossroad = isCrossroad;
-        }
-        public PathPart reverse(){
-            switch (type){
-                case Type.Straight:
-                    CoOrds co = CoOrds.fromDir(direction);
-                    return new PathPart(type,CoOrds.oppDir(direction),to.Subtract(co),from.Subtract(co),crossroad);
-                case Type.TurnL:
-                    int newDir = (direction+3)%4;
-                    co = CoOrds.fromDir(newDir);
-                    return new PathPart(PathPart.Type.TurnR,newDir,from,from.Add(co),crossroad);
-                case Type.TurnR:
-                    newDir = (direction+1)%4;
-                    co = CoOrds.fromDir(newDir);
-                    return new PathPart(PathPart.Type.TurnL,newDir,from,from.Add(co),crossroad);
-                default: //should never be reached
-                    return null;
-            }
+            this.speedLimit = speedLimit;
         }
         public int Length{
             get{

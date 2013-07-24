@@ -61,7 +61,21 @@ namespace CarSim
             public static CoOrds fromDir(int dir){
                 return (Simulation.dirs[dir]);
             }
-
+            
+            public static int dirFromString(string s){
+                switch (s[0]){
+                    case 'R': case 'r':
+                        return 0;
+                    case 'D': case 'd':
+                        return 1;
+                    case 'L': case 'l':
+                        return 2;
+                    case 'U': case 'u':
+                        return 3;
+                    default:
+                        return -1;
+                }
+            }
             public static int oppDir(int dir){
                 return (dir+2)%4;
             }

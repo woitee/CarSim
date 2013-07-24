@@ -33,6 +33,10 @@ namespace CarSim
             pbOverlay.Parent = pbCars;
 
             sim.tracer = new Tracer(infoLabel);
+            //TEMP
+            sim.Load("save.txt");
+            pbBackground.Image = sim.DrawBackground();
+            pbOverlay.Image = sim.DrawSignsAndDepots();
         }
 
 

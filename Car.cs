@@ -15,6 +15,7 @@ namespace CarSim
         }
         public double maxSpeed{
             get{ return _maxSpeed; }
+            set{ _maxSpeed = value; _actualMaxSpeed = value; }
         }
         public CoOrds from{
             get{ return basicPath.route[0].from; }
@@ -39,6 +40,7 @@ namespace CarSim
             Y += co.y; 
         }
         private double _maxSpeed;
+        private double _actualMaxSpeed;
         private double speed;
         private double X;
         private double Y;
@@ -83,18 +85,19 @@ namespace CarSim
             }
         }
 
+        //CONSTRUCTORS
         public Car(){
-            this._maxSpeed = 0;
+            this.maxSpeed = 0;
             this.X = -777;
             this.Y = -777;
             this._coords = new CoOrds(-777,-777);
         }
         public Car(double maxSpeed){ 
-            this._maxSpeed = maxSpeed;
+            this.maxSpeed = maxSpeed;
         }
         public Car(double speed, double X, double Y, CoOrds coords, int direction, Path path, Itinerary itinerary){
             //basically just for cloning
-            this._maxSpeed = speed;
+            this.maxSpeed = speed;
             this.X = X;
             this.Y = Y;
             this.basicPath = path;
@@ -110,6 +113,9 @@ namespace CarSim
             Queue<ItinPart> qu = new Queue<ItinPart>();
             for (int i = 0; i < path.route.Length; i++){
                 ItinPart itPart;
+                if(path.route[i].speedLimit > 0){
+                    qu.Enqueue(new ItinPart(ItinType.SpeedLimit, new CoOrds(path.route[i].speedLimit,0)));
+                }
                 if(path.route[i].type == PathPart.Type.Straight){
                     itPart = new ItinPart(ItinType.GoTo,
                                           path.route[i].to.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction,false))
@@ -288,6 +294,17 @@ namespace CarSim
                         speed = speed + accel;
                         speed = speed > maxTSpeed ? maxTSpeed : speed;
                     }
+                } else if (next.type == ItinType.SpeedLimit && dist < 50*speed){
+                    //close to a slowdown sign, slow down to its speed
+                    double nextMaxSpeed = ((double)next.dest.x)/145;
+                    if (speed > nextMaxSpeed){
+                        double t=2*dist/(nextMaxSpeed+speed);
+                        t = t < 1 ? 1 : t;
+                        speed -= (speed-nextMaxSpeed)/t;
+                    } else {
+                        speed = speed + accel;
+                        speed = speed > nextMaxSpeed ? nextMaxSpeed : speed;
+                    }
                 } else if ((itinerary.route.Count <= 1) && dist < 50*speed){ //should be 1
                     //close to a final depot, stop at current destination
                     double t=2*dist/speed;
@@ -295,6 +312,7 @@ namespace CarSim
                     speed -= speed/t;
                     speed = speed < 0.01 ? 0.01 : speed; //keep at least minimum speed to actually reach destination
                 } else {
+                    //just driving :]
                     speed = speed + accel;
                 }
                 speed = speed > maxSpeed ? maxSpeed : speed;
@@ -328,19 +346,27 @@ namespace CarSim
                         return true; //end of path
                     }
                     distToTravel -= dist;
-                    if (cur.type == ItinType.AskCrossroad){
-                        //cross = (Crossroad)objmap[cur.dest.x, cur.dest.y];
-                        waitingForAllow = true;
-                    } else if (cur.type == ItinType.EnterCrossroad) {
-                        //Dequeue from crosses queue and enqueue into next one.
-                        ((Crossroad)cross).passBooked = false;
-                        cross.incomCars[cur.dest.x].Remove(this);
-                        MapItem newCross = cross.connObjs[cur.dest.y];
-                        inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
-                        newCross.incomCars[newCross.getDirOf(cross)].Add(this);
-                        setCross(newCross, newCross.getDirOf(cross));
-                    } else {
-                        X = cur.dest.x; Y = cur.dest.y;
+                    switch (cur.type){ //all special itin parts, deploy here
+                        //these trigger when ItinPart is reached
+                        case ItinType.AskCrossroad:
+                            waitingForAllow = true;
+                            break;
+                        case ItinType.EnterCrossroad:
+                            //Dequeue from crosses queue and enqueue into next one.
+                            ((Crossroad)cross).passBooked = false;
+                            cross.incomCars[cur.dest.x].Remove(this);
+                            MapItem newCross = cross.connObjs[cur.dest.y];
+                            inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
+                            newCross.incomCars[newCross.getDirOf(cross)].Add(this);
+                            setCross(newCross, newCross.getDirOf(cross));
+                            maxSpeed = _actualMaxSpeed;
+                            break;
+                        case ItinType.SpeedLimit:
+                            _maxSpeed = ((double)cur.dest.x)/145;
+                            break;
+                        default:
+                            X = cur.dest.x; Y = cur.dest.y;
+                            break;
                     }
                     itinerary.route.Dequeue();
                     cur = itinerary.route.First();
@@ -436,6 +462,7 @@ namespace CarSim
                     break;
                 case ItinType.AskCrossroad:
                 case ItinType.EnterCrossroad:
+                case ItinType.SpeedLimit:
                 default:
                     distX = 0; distY = 0; totalDist = 0;
                     return;

@@ -23,6 +23,7 @@ namespace CarSim
         
         private char[,] map = new char[WIDTH,HEIGHT];
         private MapItem[,] objmap = new MapItem[WIDTH,HEIGHT]; //only stores crossroads and depots, for quick access
+        private Sign[,,] signmap = new Sign[WIDTH, HEIGHT, 4]; //stores info about signs
 
         private List<Car> activeCars = new List<Car>();
         private Car[] cars;
@@ -46,11 +47,10 @@ namespace CarSim
         }
 
         public Bitmap DrawSignsAndDepots(){
-            return drawer.DrawSignsAndDepots(depots);
+            return drawer.DrawSignsAndDepots(depots,signmap);
         }
 
         public void Start(){
-            //ToDo
             time = 0; nextCar = 0;
             activeCars = new List<Car>();
             foreach (MapItem mi in depots){
@@ -81,6 +81,7 @@ namespace CarSim
 
         /// <summary>
         /// Creates Depots and Crossroad objects, and sets Paths between them.
+        /// Takes into account signs, make sure signmap is set.
         /// </summary>
         private void ProcessMap(){
             Queue<Depot> depotList=new Queue<Depot>();
@@ -111,7 +112,7 @@ namespace CarSim
                     }
                 }
             }
-            planner = new Planner(map, objmap);
+            planner = new Planner(map, objmap, signmap);
             //create Depots
             depots = new Depot[depotList.Count];
             for (int i = 0; i < depots.Length; i++){
@@ -138,12 +139,18 @@ namespace CarSim
                     map[j,i]=line[j];
                 }
             }
-            ProcessMap();
             sr.ReadLine(); line = sr.ReadLine();
             while(line != "===CARS==="){
-                //ToDo: load signs
+                string[] arr = line.Split(' ');
+                //Type X Y direction
+                Sign sign = new Sign(Sign.typeString(arr[0]));
+                int signX = int.Parse(arr[1]);
+                int signY = int.Parse(arr[2]);
+                int signDir = CoOrds.dirFromString(arr[3]);
+                signmap[signX,signY,signDir] = sign;
                 line = sr.ReadLine();
             }
+            ProcessMap();
             List<Car> stockCars = new List<Car>();
             List<int> starts = new List<int>();
             do {
@@ -161,6 +168,7 @@ namespace CarSim
             tracer.Trace("Map loaded.");
         }
 
+        //Saving not implemented, modifying map at runtime is not yet allowed
         public void Save(string path = "save.txt"){
             //saves map to file
             StreamWriter sw = new StreamWriter(path);
