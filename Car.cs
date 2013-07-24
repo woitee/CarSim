@@ -67,8 +67,20 @@ namespace CarSim
         }
         private int crossComingFrom; //the road we are coming to cross
 
-        //for handling cars in front and eventually passing them
-        public Car inFront;
+        //for handling cars in front, back and eventually passing them
+        private Car _inFront;
+        public Car inFront{
+            set{
+                if(inFront != null){
+                    inFront.inBack = this;
+                }
+                _inFront = value;
+            }
+            get{
+                return _inFront;
+            }
+        }
+        private Car inBack;
         private const int safeDistanceMult = 40;
         //passing
         private bool passing;
@@ -219,7 +231,7 @@ namespace CarSim
             #region if passing
             if (passing){
                 if(passingPhase < 16){
-                    //First part of three.
+                    //First part of four.
                     if(passingPhase % 4 == 0){
                         CoOrds dir = CoOrds.fromDir( CoOrds.toRightDir(direction/3) );
                         addToCoords(dir);
@@ -227,7 +239,14 @@ namespace CarSim
                     }
                     passingPhase++;
                 } else if (passingPhase == 16){
-                    //Second part of three.
+                    //Second part of four.
+                    if(inBack != null){ 
+                        inBack._inFront = inFront;
+                    }
+                    inFront.inBack = inBack;
+                    passingPhase++;
+                } else if (passingPhase == 17){
+                    //Third part of four.
                     int inFrontNeeded = (int)Math.Round(passCar.speed*safeDistanceMult+10);
                     int diff;
                     switch (direction/3){
@@ -244,9 +263,12 @@ namespace CarSim
                     }
                     if(diff < -inFrontNeeded){
                         passingPhase++;
+                    } else {
+                        speed = speed + accel;
+                        speed = speed > maxSpeed ? maxSpeed : speed;
                     }
-                } else if (passingPhase < 33){
-                    //Third part of three.
+                } else if (passingPhase < 34){
+                    //Fourth part of four.
                     if(passingPhase % 4 == 0){
                         CoOrds dir = CoOrds.fromDir( CoOrds.toLeftDir(direction/3) );
                         addToCoords(dir);
@@ -256,8 +278,13 @@ namespace CarSim
                 } else {
                     //end passing
                     passing = false;
+                    Car tempCar = inFront;
                     inFront = passCar.inFront;
-                    passCar.inFront = this;
+                    passCar._inFront = this;
+                    while(tempCar != passCar){
+                        tempCar.beingPassed = false;
+                        tempCar = tempCar.inFront;
+                    }
                     passCar.beingPassed = false;
                 }
                 //drive accordingly
@@ -319,6 +346,11 @@ namespace CarSim
                 if((inFront != null) && (coords.Distance(inFront.coords) < 10+safeDistanceMult*speed)){
                     if(canPass()){
                         //initiate passing
+                        Car tempCar = inFront;
+                        while(tempCar != passCar){
+                            tempCar.beingPassed = true;
+                            tempCar = tempCar.inFront;
+                        }
                         passCar.beingPassed = true;
                         passing = true;
                         passingPhase = 0;

@@ -140,6 +140,7 @@ namespace CarSim
                 }
             }
             sr.ReadLine(); line = sr.ReadLine();
+            signmap = new Sign[WIDTH, HEIGHT, 4];
             while(line != "===CARS==="){
                 string[] arr = line.Split(' ');
                 //Type X Y direction
