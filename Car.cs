@@ -308,14 +308,15 @@ namespace CarSim
                 } else if (waitingForAllow && (dist < 50*speed || dist < 1)){
                     //waiting for crossroad to clear way, stop at current destination
                     double t=2*dist/speed;
-                    t = t < 1 ? 1 : t;
+                    t = t > 1 ? t : 1; //cant be other way, because of handling NaN
+                    if(t==0){ int abc = 5; }
                     speed -= speed/t;
                 } else if (next.isTurn() && dist < 50*speed) {
                     //close to a turn, slow down to turning speed at current destination
                     double maxTSpeed = next.type == ItinType.TurnLeftTo ? maxLTurnSpeed : maxRTurnSpeed;
                     if (speed > maxTSpeed){
                         double t=2*dist/(maxTSpeed+speed);
-                        t = t < 1 ? 1 : t;
+                        t = t > 1 ? t : 1; //cant be other way, because of handling NaN
                         speed -= (speed-maxTSpeed)/t;
                     } else {
                         speed = speed + accel;
@@ -326,7 +327,7 @@ namespace CarSim
                     double nextMaxSpeed = ((double)next.dest.x)/145;
                     if (speed > nextMaxSpeed){
                         double t=2*dist/(nextMaxSpeed+speed);
-                        t = t < 1 ? 1 : t;
+                        t = t > 1 ? t : 1; //cant be other way, because of handling NaN
                         speed -= (speed-nextMaxSpeed)/t;
                     } else {
                         speed = speed + accel;
@@ -335,7 +336,7 @@ namespace CarSim
                 } else if ((itinerary.route.Count <= 1) && dist < 50*speed){ //should be 1
                     //close to a final depot, stop at current destination
                     double t=2*dist/speed;
-                    t = t < 1 ? 1 : t;
+                    t = t > 1 ? t : 1; //cant be other way, because of handling NaN
                     speed -= speed/t;
                     speed = speed < 0.01 ? 0.01 : speed; //keep at least minimum speed to actually reach destination
                 } else {
@@ -385,8 +386,8 @@ namespace CarSim
                             break;
                         case ItinType.EnterCrossroad:
                             //Dequeue from crosses queue and enqueue into next one.
-                            ((Crossroad)cross).passBooked = false;
                             cross.incomCars[cur.dest.x].Remove(this);
+                            ((Crossroad)cross).lastPassed = this;
                             MapItem newCross = cross.connObjs[cur.dest.y];
                             inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
                             newCross.incomCars[newCross.getDirOf(cross)].Add(this);
@@ -467,6 +468,7 @@ namespace CarSim
                 }
                 #endregion
             }
+            if( X != X ){ int abc = 5; }
             _coords = new CoOrds((int)X,(int)Y);
             timeAlive++; totalDistTravelled += speed;
             return false;
