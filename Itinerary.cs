@@ -12,7 +12,10 @@ namespace CarSim
             this.route = route;
         }
         public Itinerary Clone(){
-            Queue<ItinPart> newRoute = new Queue<ItinPart>(route);
+            Queue<ItinPart> newRoute = new Queue<ItinPart>();
+            foreach(ItinPart ip in route){
+                newRoute.Enqueue(ip.Clone());
+            }
             return new Itinerary(newRoute);
         }
     }
@@ -31,6 +34,9 @@ namespace CarSim
         }
         public bool isTurn(){
             return ((this.type == ItinType.TurnLeftTo) || (this.type == ItinType.TurnRightTo));
+        }
+        public ItinPart Clone(){
+            return new ItinPart(type, dest);
         }
     }
 

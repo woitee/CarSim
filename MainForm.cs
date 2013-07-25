@@ -58,12 +58,43 @@ namespace CarSim
                 sim.Load(ofDialog.FileName);
                 pbBackground.Image = sim.DrawBackground();
                 pbOverlay.Image = sim.DrawSignsAndDepots();
+                stopToolStripMenuItem.Enabled = false;
+                paused = false;
+                mainTimer_Tick(null, null);
+                mainTimer.Stop();
             }
         }
 
         private void startToolStripMenuItem_Click(object sender, EventArgs e){
             sim.Start();
             mainTimer.Start();
+            stopToolStripMenuItem.Enabled = true;
+            paused = false;
+        }
+
+        private bool _paused = false;
+        private bool paused{
+            set{
+                if(value){
+                    stopToolStripMenuItem.Text = "Unpause";
+                } else {
+                    stopToolStripMenuItem.Text = "Stop";
+                }
+                _paused = value;
+            }
+            get{
+                return _paused;
+            }
+        }
+        private void stopToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(paused){
+                mainTimer.Start();
+                paused = false;
+            } else {
+                mainTimer.Stop();
+                paused = true;
+            }
         }
     }
 }

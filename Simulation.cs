@@ -79,6 +79,10 @@ namespace CarSim
             time++;
         }
 
+        public void Stop(){
+            activeCars = new List<Car>();
+        }
+
         /// <summary>
         /// Creates Depots and Crossroad objects, and sets Paths between them.
         /// Takes into account signs, make sure signmap is set.
@@ -131,6 +135,11 @@ namespace CarSim
 
         public void Load(string path = "save.txt"){
             //loads map from file
+            //initialize
+            Stop();
+            map = new char[WIDTH,HEIGHT];
+            objmap = new MapItem[WIDTH,HEIGHT];
+            //process
             string line;
             StreamReader sr = new StreamReader(path);
             for (int i = 0; i < HEIGHT; i++){

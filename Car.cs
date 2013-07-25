@@ -108,7 +108,7 @@ namespace CarSim
             this.maxSpeed = maxSpeed;
         }
         public Car(double speed, double X, double Y, CoOrds coords, int direction, Path path, Itinerary itinerary){
-            //basically just for cloning
+            //Basically just used for cloning
             this.maxSpeed = speed;
             this.X = X;
             this.Y = Y;
@@ -119,7 +119,6 @@ namespace CarSim
         }
 
         public Itinerary MakeItinerary(){
-            //ToDo: make it real
             _coords = path.route[0].from.Multiply(TILESIZE).Add(directionOffset(path.route[0].direction,true));
             _direction = path.route[0].direction*3;
             Queue<ItinPart> qu = new Queue<ItinPart>();
@@ -309,7 +308,6 @@ namespace CarSim
                     //waiting for crossroad to clear way, stop at current destination
                     double t=2*dist/speed;
                     t = t > 1 ? t : 1; //cant be other way, because of handling NaN
-                    if(t==0){ int abc = 5; }
                     speed -= speed/t;
                 } else if (next.isTurn() && dist < 50*speed) {
                     //close to a turn, slow down to turning speed at current destination
@@ -468,7 +466,6 @@ namespace CarSim
                 }
                 #endregion
             }
-            if( X != X ){ int abc = 5; }
             _coords = new CoOrds((int)X,(int)Y);
             timeAlive++; totalDistTravelled += speed;
             return false;
@@ -615,7 +612,7 @@ namespace CarSim
         }
 
         public Car Clone(){
-            return new Car(_maxSpeed,X,Y,coords,direction,basicPath,itinerary.Clone() );
+            return new Car(_maxSpeed,X,Y,coords,direction,basicPath.Clone(),itinerary.Clone() );
         }
     }
 }

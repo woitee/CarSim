@@ -32,6 +32,14 @@ namespace CarSim
                 return sum;
             }
         }
+        public Path Clone(){
+            Path pth = new Path();
+            pth.route = new PathPart[route.Length];
+            for (int i = 0; i < route.Length; i++){
+                pth.route[i] = this.route[i].Clone();
+            }
+            return pth;
+        }
     }
 
     public class PathPart
@@ -58,6 +66,9 @@ namespace CarSim
                 //if(this.to.Equals(this.from)){return 0;}
                 return Math.Abs(this.to.x - this.from.x) + Math.Abs(this.to.y - this.from.y);
             }
+        }
+        public PathPart Clone(){
+            return new PathPart(type,direction,from,to,crossroad,speedLimit);
         }
     }
 }
