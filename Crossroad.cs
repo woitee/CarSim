@@ -54,7 +54,7 @@ namespace CarSim
 
         public override void Reset(){
             base.Reset();
-            lastPassed = new Car();
+            lastPasses = new List<Car>();
         }
     }
 }

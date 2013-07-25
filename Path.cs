@@ -50,16 +50,18 @@ namespace CarSim
         public CoOrds from;
         public CoOrds to;
         public bool crossroad;
-        public int speedLimit = -1;
+        public PathPartMod mod = PathPartMod.none;
+        public int modArg = -1;
         
         public PathPart(Type type, int direction, CoOrds from, CoOrds to, bool isCrossroad,
-            int speedLimit){
+            PathPartMod mod, int modArg){
             this.type = type;
             this.direction = direction;
             this.from = from;
             this.to = to;
             crossroad = isCrossroad;
-            this.speedLimit = speedLimit;
+            this.mod = mod;
+            this.modArg = modArg;
         }
         public int Length{
             get{
@@ -68,7 +70,8 @@ namespace CarSim
             }
         }
         public PathPart Clone(){
-            return new PathPart(type,direction,from,to,crossroad,speedLimit);
+            return new PathPart(type,direction,from,to,crossroad,mod,modArg);
         }
     }
+    public enum PathPartMod{speed, nopass, none}
 }

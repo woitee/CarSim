@@ -41,6 +41,6 @@ namespace CarSim
     }
 
     public enum ItinType{
-        GoTo, TurnLeftTo, TurnRightTo, AskCrossroad, EnterCrossroad, SpeedLimit
+        GoTo, TurnLeftTo, TurnRightTo, AskCrossroad, EnterCrossroad, SpeedLimit, NoPassing
     }
 }

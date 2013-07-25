@@ -41,6 +41,9 @@ namespace CarSim
             string line = base.ToString();
             return line.ToLowerInvariant();
         }
+        public bool isSpeedSign(){
+            return ((type == SignType.Max90) || (type == SignType.Max60) || (type == SignType.Max30));
+        }
     }
     public enum SignType
     {

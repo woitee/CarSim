@@ -38,11 +38,11 @@ namespace CarSim
         /// <returns></returns>
         private Path getPath(CoOrds cur, CoOrds last, out MapItem endObj){
             Queue<PathPart> workPath = new Queue<PathPart>();
-            int a;
+            PathPartMod a; int b;
             int dir = cur.Subtract(last).toDir();
-            a = getSpeedLimit(cur, dir); //a could be named speedLimitSoFarOnThisRoad, but thats too long
+            a = getPathPartMod(cur, dir, out b); //a could be named speedLimitSoFarOnThisRoad, but thats too long
 
-            PathPart pp = new PathPart(PathPart.Type.Straight, dir, cur, cur, false, a);
+            PathPart pp = new PathPart(PathPart.Type.Straight, dir, cur, cur, false, a, b);
             workPath.Enqueue(pp); //length 0
             
             if(objmap[cur.x,cur.y] != null){
@@ -64,33 +64,33 @@ namespace CarSim
                             //c is next square
                             //build path
                             if (workPath.Count == 0){
-                                int b = getSpeedLimit(cur,i);
-                                a = a >= b ? a : b; 
-                                pp = new PathPart(PathPart.Type.Straight, i, cur, c, false,a);
+                                a = getPathPartMod(cur,i, out b);
+                                pp = new PathPart(PathPart.Type.Straight, i, cur, c, false,a,b);
                                 workPath.Enqueue(pp);
                             } else {
                                 PathPart part = workPath.Last();
                                 if(part.direction == i){ //if the road is continuing the same direction as before
-                                    int b = getSpeedLimit(cur,i);
-                                    if (b>a){
-                                        a = a >= b ? a : b;
-                                        pp = new PathPart(PathPart.Type.Straight, i, cur, c, false, a);
-                                        workPath.Enqueue(pp);
-                                    } else {
-                                        //nothing strange
-                                        part.to = c;
+                                    a = getPathPartMod(cur,i, out b);
+                                    switch (a){
+                                        case PathPartMod.nopass:
+                                        case PathPartMod.speed:
+                                            pp = new PathPart(PathPart.Type.Straight, i, cur, c, false, a ,b);
+                                            workPath.Enqueue(pp);
+                                            break;
+                                        case PathPartMod.none:
+                                            //nothing strange
+                                            part.to = c;
+                                            break;
                                     }
                                 } else {
                                     if (((i-part.direction) == 1) || ((i-part.direction) == -3)) {
-                                        int b = getSpeedLimit(cur,part.direction);
-                                        a = a >= b ? a : b; 
-                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnR, i, cur, c, false, a)); //1 square long
+                                        a = getPathPartMod(cur,part.direction, out b);
+                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnR, i, cur, c, false, a, b)); //1 square long
                                     } else {
-                                        int b = getSpeedLimit(cur,part.direction);
-                                        a = a >= b ? a : b; 
-                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnL, i, cur, c, false, a)); //1 square long
+                                        a = getPathPartMod(cur, part.direction, out b);
+                                        workPath.Enqueue(new PathPart(PathPart.Type.TurnL, i, cur, c, false, a, b)); //1 square long
                                     }
-                                    workPath.Enqueue(new PathPart(PathPart.Type.Straight, i, c, c, false, -1)); //0 squares long
+                                    workPath.Enqueue(new PathPart(PathPart.Type.Straight, i, c, c, false, PathPartMod.none, -1)); //0 squares long
                                 }
                             }
                             if (objmap[c.x,c.y] == null){
@@ -113,17 +113,19 @@ namespace CarSim
             endObj = null; return null;
         }
 
-        private int getSpeedLimit(CoOrds co, int direction){
-            if(signmap[ co.x, co.y, direction ] == null) {return -1;}
+        private PathPartMod getPathPartMod(CoOrds co, int direction, out int arg){
+            if(signmap[ co.x, co.y, direction ] == null) {arg = -1; return PathPartMod.none;}
             switch (signmap[ co.x, co.y, direction ].type){
                 case SignType.Max30:
-                    return 30;
+                    arg = 30; return PathPartMod.speed;
                 case SignType.Max60:
-                    return 60;
+                    arg = 60; return PathPartMod.speed;
                 case SignType.Max90:
-                    return 90;
+                    arg = 90; return PathPartMod.speed;
+                case SignType.Nopass:
+                    arg = -1; return PathPartMod.nopass;
                 default:
-                    return -1;
+                    arg = -1; return PathPartMod.none;
             }
         }
 
@@ -205,7 +207,7 @@ namespace CarSim
                     } else {
                         type = PathPart.Type.TurnL;
                     }
-                    pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true, -1)};
+                    pth2.route = new PathPart[1] {new PathPart(type, i, crd.coords, crd.coords.Add(CoOrds.fromDir(i)), true, PathPartMod.none, -1)};
                     pth = pth.Merge(pth2);
                     pth = pth.Merge(crd.fromPaths[i]);
                 }

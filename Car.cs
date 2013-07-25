@@ -83,6 +83,7 @@ namespace CarSim
         private Car inBack;
         private const int safeDistanceMult = 40;
         //passing
+        private bool passingAllowed = true;
         private bool passing;
         private int passingPhase;
         public bool beingPassed;
@@ -124,9 +125,17 @@ namespace CarSim
             Queue<ItinPart> qu = new Queue<ItinPart>();
             for (int i = 0; i < path.route.Length; i++){
                 ItinPart itPart;
-                if(path.route[i].speedLimit > 0){
-                    qu.Enqueue(new ItinPart(ItinType.SpeedLimit, new CoOrds(path.route[i].speedLimit,0)));
-                }
+                switch (path.route[i].mod){
+		            case PathPartMod.speed:
+                        qu.Enqueue(new ItinPart(ItinType.SpeedLimit, new CoOrds(path.route[i].modArg,0)));
+                        break;
+                    case PathPartMod.nopass:
+                        qu.Enqueue(new ItinPart(ItinType.NoPassing, new CoOrds(0,0)));
+                        break;
+                    case PathPartMod.none:
+                    default:
+                        break;
+	            }   
                 if(path.route[i].type == PathPart.Type.Straight){
                     itPart = new ItinPart(ItinType.GoTo,
                                           path.route[i].to.Multiply(TILESIZE).Add(directionOffset(path.route[i].direction,false))
@@ -156,13 +165,16 @@ namespace CarSim
                                                                                 path.route[i].direction
                                                                                )));
                     if (path.route[i].type == PathPart.Type.Straight){ continue;}
-                    /*if(path.route[i+1].from.Equals(path.route[i+1].to)) {
-                        //a crossroad or mapitem immediately following this
-                        qu.Enqueue(itPart);
-                    }*/
-                } //else {
+                }
                 qu.Enqueue(itPart);
-                //}
+            }
+            //process start
+            double distX; double distY; double dist;
+            getDist(qu.First(), out distX, out distY, out dist);
+            while (dist == 0){
+                ProcessSpecItin( qu.First() );
+                qu.Dequeue();
+                getDist(qu.First(), out distX, out distY, out dist);
             }
             return new Itinerary(qu);
         }
@@ -373,32 +385,17 @@ namespace CarSim
                     if(itinerary.route.Count <= 1){
                         List<Car> qu = cross.incomCars[CoOrds.oppDir(direction/3)];
                         qu.Remove(this);
-                        if(qu.Count > 0) {qu.First().inFront = null;}
+                        if(qu.Count > 0) {
+                            Car first = qu.First();
+                            while(first.passing){
+                                first = cross.getCarBehind(crossComingFrom, first);
+                            }
+                            first.inFront = null;
+                        }
                         return true; //end of path
                     }
                     distToTravel -= dist;
-                    switch (cur.type){ //all special itin parts, deploy here
-                        //these trigger when ItinPart is reached
-                        case ItinType.AskCrossroad:
-                            waitingForAllow = true;
-                            break;
-                        case ItinType.EnterCrossroad:
-                            //Dequeue from crosses queue and enqueue into next one.
-                            cross.incomCars[cur.dest.x].Remove(this);
-                            ((Crossroad)cross).lastPassed = this;
-                            MapItem newCross = cross.connObjs[cur.dest.y];
-                            inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
-                            newCross.incomCars[newCross.getDirOf(cross)].Add(this);
-                            setCross(newCross, newCross.getDirOf(cross));
-                            maxSpeed = _actualMaxSpeed;
-                            break;
-                        case ItinType.SpeedLimit:
-                            _maxSpeed = ((double)cur.dest.x)/145;
-                            break;
-                        default:
-                            X = cur.dest.x; Y = cur.dest.y;
-                            break;
-                    }
+                    ProcessSpecItin(cur);
                     itinerary.route.Dequeue();
                     cur = itinerary.route.First();
                     if( cur.isTurn() ){
@@ -471,6 +468,34 @@ namespace CarSim
             return false;
         }
         
+        private void ProcessSpecItin(ItinPart cur){
+            switch (cur.type){ //all special itin parts, deploy here
+                        //these trigger when ItinPart is reached
+                        case ItinType.AskCrossroad:
+                            waitingForAllow = true;
+                            break;
+                        case ItinType.EnterCrossroad:
+                            //Dequeue from crosses queue and enqueue into next one.
+                            cross.incomCars[cur.dest.x].Remove(this);
+                            ((Crossroad)cross).lastPassed = this;
+                            MapItem newCross = cross.connObjs[cur.dest.y];
+                            inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
+                            newCross.incomCars[newCross.getDirOf(cross)].Add(this);
+                            setCross(newCross, newCross.getDirOf(cross));
+                            maxSpeed = _actualMaxSpeed; passingAllowed = true; //cancel whats forbidden
+                            break;
+                        case ItinType.SpeedLimit:
+                            _maxSpeed = ((double)cur.dest.x)/145;
+                            break;
+                        case ItinType.NoPassing:
+                            passingAllowed = false;
+                            break;
+                        default:
+                            X = cur.dest.x; Y = cur.dest.y;
+                            break;
+                    }
+        }
+
         private static double getDist(ItinPart itPart, double X, double Y){
             double devNull; double totalDist;
             getDist(itPart, X, Y, 0, out devNull, out devNull, out totalDist);
@@ -511,7 +536,7 @@ namespace CarSim
         */
         private bool canPass(){
             passCar = inFront;
-            if(passing || beingPassed || (totalDistTravelled < 32) || (itinerary.route.First().type != ItinType.GoTo)){
+            if(passing || beingPassed || (totalDistTravelled < 32) || (itinerary.route.First().type != ItinType.GoTo) || !passingAllowed){
                 return false;
             } else {
                 #region figure out how many cars to pass and how long of a stretch we need
@@ -520,7 +545,7 @@ namespace CarSim
                     if ( !passCar.itinerary.route.First().dest.Equals( itinerary.route.First().dest) ||
                         passCar.beingPassed || passCar.passing || (maxSpeed < passCar.maxSpeed) ) { return false; }
                     if ((passCar.inFront != null) &&
-                        (passCar.coords.Distance(passCar.inFront.coords) < inFront.speed*safeDistanceMult+30)){
+                        (passCar.coords.Distance(passCar.inFront.coords) < passCar.speed*safeDistanceMult+30)){
                         passCar = passCar.inFront;
                         goOn = true;
                     } else {
@@ -528,7 +553,7 @@ namespace CarSim
                     }
                 } while (goOn);
                 while((passCar.inFront != null) &&
-                    (passCar.coords.Distance(passCar.inFront.coords) < inFront.speed*safeDistanceMult+30)){
+                    (passCar.coords.Distance(passCar.inFront.coords) < passCar.speed*safeDistanceMult+30)){
                     if (!passCar.inFront.itinerary.route.First().dest.Equals( itinerary.route.First().dest ) || 
                         passCar.beingPassed) {return false;}
                     passCar = passCar.inFront;
