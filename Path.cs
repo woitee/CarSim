@@ -73,5 +73,5 @@ namespace CarSim
             return new PathPart(type,direction,from,to,crossroad,mod,modArg);
         }
     }
-    public enum PathPartMod{speed, nopass, none}
+    public enum PathPartMod{speed, nopass, noway, none}
 }

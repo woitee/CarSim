@@ -479,8 +479,13 @@ namespace CarSim
                             cross.incomCars[cur.dest.x].Remove(this);
                             ((Crossroad)cross).lastPassed = this;
                             MapItem newCross = cross.connObjs[cur.dest.y];
-                            inFront = newCross.incomCars[newCross.getDirOf(cross)].LastOrDefault();
-                            newCross.incomCars[newCross.getDirOf(cross)].Add(this);
+
+                            int newIncomDir = CoOrds.oppDir(cross.getEndDir(cross.getDirOf(newCross)));
+                            //int newIncomDir = newCross.getDirOf(cross);
+                            inFront = newCross.incomCars[newIncomDir].LastOrDefault();
+                                    
+
+                            newCross.incomCars[newIncomDir].Add(this);
                             setCross(newCross, newCross.getDirOf(cross));
                             maxSpeed = _actualMaxSpeed; passingAllowed = true; //cancel whats forbidden
                             break;

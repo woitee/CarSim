@@ -22,8 +22,7 @@ namespace CarSim
             for (int i = 0; i < 4; i++){
                 CoOrds c = mapitem.coords.Add(CoOrds.fromDir(i));
                 if(c.isValid() && (map[c.x,c.y] == 'D' || map[c.x,c.y] == '+')) {
-                    mapitem.fromPaths[i] = getPath(c, mapitem.coords, out mapitem.connObjs[i]);
-                    
+                    mapitem.fromPaths[i] = getPath(c, mapitem.coords, out mapitem.connObjs[i]);;
                 }
             }
             return;
@@ -40,8 +39,9 @@ namespace CarSim
             Queue<PathPart> workPath = new Queue<PathPart>();
             PathPartMod a; int b;
             int dir = cur.Subtract(last).toDir();
-            a = getPathPartMod(cur, dir, out b); //a could be named speedLimitSoFarOnThisRoad, but thats too long
+            a = getPathPartMod(cur, dir, out b);
 
+            if (a == PathPartMod.noway) {endObj = null; return null;}
             PathPart pp = new PathPart(PathPart.Type.Straight, dir, cur, cur, false, a, b);
             workPath.Enqueue(pp); //length 0
             
@@ -65,11 +65,13 @@ namespace CarSim
                             //build path
                             if (workPath.Count == 0){
                                 a = getPathPartMod(cur,i, out b);
+                                if (a == PathPartMod.noway) {endObj = null; return null;}
                                 pp = new PathPart(PathPart.Type.Straight, i, cur, c, false,a,b);
                                 workPath.Enqueue(pp);
                             } else {
                                 PathPart part = workPath.Last();
                                 if(part.direction == i){ //if the road is continuing the same direction as before
+                                    if (a == PathPartMod.noway) {endObj = null; return null;}
                                     a = getPathPartMod(cur,i, out b);
                                     switch (a){
                                         case PathPartMod.nopass:
@@ -85,9 +87,11 @@ namespace CarSim
                                 } else {
                                     if (((i-part.direction) == 1) || ((i-part.direction) == -3)) {
                                         a = getPathPartMod(cur,part.direction, out b);
+                                        if (a == PathPartMod.noway) {endObj = null; return null;}
                                         workPath.Enqueue(new PathPart(PathPart.Type.TurnR, i, cur, c, false, a, b)); //1 square long
                                     } else {
                                         a = getPathPartMod(cur, part.direction, out b);
+                                        if (a == PathPartMod.noway) {endObj = null; return null;}
                                         workPath.Enqueue(new PathPart(PathPart.Type.TurnL, i, cur, c, false, a, b)); //1 square long
                                     }
                                     workPath.Enqueue(new PathPart(PathPart.Type.Straight, i, c, c, false, PathPartMod.none, -1)); //0 squares long
@@ -100,6 +104,7 @@ namespace CarSim
                                 goOn = true; break;
                             } else {
                                 //finish here
+                                if(getPathPartMod(c, i, out b) == PathPartMod.noway) { endObj = null; return null; }
                                 endObj = objmap[c.x,c.y];
                                 Path path = new Path();
                                 path.route = workPath.ToArray();
@@ -124,6 +129,10 @@ namespace CarSim
                     arg = 90; return PathPartMod.speed;
                 case SignType.Nopass:
                     arg = -1; return PathPartMod.nopass;
+                case SignType.Notthisway:
+                    arg = -1; return PathPartMod.noway;
+                case SignType.Noway:
+                    arg = -1; return PathPartMod.noway;
                 default:
                     arg = -1; return PathPartMod.none;
             }

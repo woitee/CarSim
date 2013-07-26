@@ -47,6 +47,14 @@ namespace CarSim
             }
             return -1; //counts as errorCode
         }
+        /// <summary>
+        /// Return ending direction of outgoing path.
+        /// </summary>
+        /// <param name="dir">Direction of the outgoing path.</param>
+        /// <returns>Direction, in which the part ends.</returns>
+        public int getEndDir(int dir){
+            return fromPaths[dir].route.Last().direction;
+        }
         public virtual void Reset(){
             //resets car queues
             incomCars = new List<Car>[4] {new List<Car>(),new List<Car>(),new List<Car>(),new List<Car>()};
