@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
+    /// <summary>
+    /// Car object, that travels the map, interacts with its surroundings.
+    /// It can be drawn by reading its coordinates in variable "coords" and direction in variable "direction".
+    /// After setting its path, it creates an itinerary which consists of a list of temporary goals,
+    /// which it goes through in order. It checks distances in front of him as it goes, and initiates passing,
+    /// if it calculates enough room in front of a car, considering its maximum speed. Can pass multiple cars at once.
+    /// </summary>
     class Car
     {
         private const int TILESIZE = Simulation.TILESIZE;
@@ -99,17 +106,34 @@ namespace CarSim
         }
 
         //CONSTRUCTORS
+        /// <summary>
+        /// Creates a new car, usually used for initializing variables. Has coords (-777,-777), to not interact with anything.
+        /// </summary>
         public Car(){
             this.maxSpeed = 0;
             this.X = -777;
             this.Y = -777;
             this._coords = new CoOrds(-777,-777);
         }
+        /// <summary>
+        /// Creates a car with maximum speed set. Commonly used.
+        /// Coordinates are set by assigning a path to this car.
+        /// </summary>
+        /// <param name="maxSpeed">Maximum speed of the car in kph.</param>
         public Car(double maxSpeed){ 
             this.maxSpeed = maxSpeed;
         }
+        /// <summary>
+        /// Creates a car with most variables set. Used commonly for cloning cars.
+        /// </summary>
+        /// <param name="speed">Current speed in kph.</param>
+        /// <param name="X">Current X coordinate.</param>
+        /// <param name="Y">Current Y coordinate.</param>
+        /// <param name="coords">Current coordinates.</param>
+        /// <param name="direction">Current direction.</param>
+        /// <param name="path">Path the car will travel. Won't be instantly converted to itinerary.</param>
+        /// <param name="itinerary">Itinerary created from path of the car.</param>
         public Car(double speed, double X, double Y, CoOrds coords, int direction, Path path, Itinerary itinerary){
-            //Basically just used for cloning
             this.maxSpeed = speed;
             this.X = X;
             this.Y = Y;
@@ -119,7 +143,11 @@ namespace CarSim
             this.itinerary = itinerary;
         }
 
-        public int willTurn(){ //return where is this car gonna turn at the next crossroad 0-2 left straight right
+        /// <summary>
+        /// Figures where the car will turn.
+        /// </summary>
+        /// <returns>Value 0-2, meaning turns left, goes straight, turns right, respectively.</returns>
+        public int willTurn(){
             bool isNext = false;
             foreach(ItinPart ip in itinerary.route){
                 if (isNext){
@@ -141,6 +169,10 @@ namespace CarSim
             return -1;
         }
 
+        /// <summary>
+        /// Called when a path is set, it creates a list of temporary goals, it needs to suceed in order.
+        /// </summary>
+        /// <returns>An itinerary object consisting of temporary goals.</returns>
         public Itinerary MakeItinerary(){
             _coords = path.route[0].from.Multiply(TILESIZE).Add(directionOffset(path.route[0].direction,true));
             _direction = path.route[0].direction*3;
@@ -201,6 +233,13 @@ namespace CarSim
             return new Itinerary(qu);
         }
 
+        /// <summary>
+        /// Contains visual car positions relative to left top corner of tile.
+        /// </summary>
+        /// <param name="dir">Direction the car is facing.</param>
+        /// <param name="afterCrossroad">If we want the coordinates of the car when it just crossed a crossroad,
+        /// or just before it has passed one.</param>
+        /// <returns>CoOrds value of the offset (x,y).</returns>
         private CoOrds directionOffset(int dir, bool afterCrossroad){
             if(afterCrossroad){//this is where they ride from
                 switch(dir){
@@ -231,11 +270,19 @@ namespace CarSim
             }
         }
 
+        /// <summary>
+        /// Calculates change in one tick. Considers all distances from other objects and changes speed and coordinates accordingly.
+        /// If this returns true, the car has reached the end of its path, and can thus be removed.
+        /// </summary>
+        /// <returns>True, if car has reached its destination.</returns>
         public bool Tick(){ //returns true if car has reached its destination
             //calculate distances
             ItinPart cur = itinerary.route.First();
             ItinPart next = itinerary.route.Count > 1 ? itinerary.route.ElementAt(1) : new ItinPart();
-            next = next.type == ItinType.EnterCrossroad ? itinerary.route.ElementAt(2) : next;
+            int i = 1;
+            while(next.type == ItinType.EnterCrossroad || next.type == ItinType.NoPassing || next.type == ItinType.EnterCrossroad){
+                next = itinerary.route.ElementAt(++i);
+            }
             double distX, distY, dist;
             getDist(cur, out distX, out distY, out dist);
             #region figure out what speed
@@ -490,6 +537,10 @@ namespace CarSim
             return false;
         }
         
+        /// <summary>
+        /// Processes itinerary parts (temporary goals), when they are reached.
+        /// </summary>
+        /// <param name="cur">Itinerary part to process.</param>
         private void ProcessSpecItin(ItinPart cur){
             switch (cur.type){ //all special itin parts, deploy here
                         //these trigger when ItinPart is reached
@@ -507,7 +558,7 @@ namespace CarSim
                             
                             inFront = newCross.incomCars[newIncomDir].LastOrDefault();      
                             newCross.incomCars[newIncomDir].Add(this);
-                            setCross(newCross, newCross.getDirOf(cross));
+                            setCross(newCross, newIncomDir);
                             maxSpeed = _actualMaxSpeed; passingAllowed = true; //cancel whats forbidden
                             break;
                         case ItinType.SpeedLimit:
@@ -522,6 +573,8 @@ namespace CarSim
                     }
         }
 
+        //These return distances from itParts goal, some return even x-distance and y-distance, some do not.
+        //Non-driving itinerary parts count as distance zero.
         private static double getDist(ItinPart itPart, double X, double Y){
             double devNull; double totalDist;
             getDist(itPart, X, Y, 0, out devNull, out devNull, out totalDist);
@@ -662,6 +715,10 @@ namespace CarSim
             }
         }
 
+        /// <summary>
+        /// Creates a duplicate of the car object.
+        /// </summary>
+        /// <returns>A new Car object.</returns>
         public Car Clone(){
             return new Car(_maxSpeed,X,Y,coords,direction,basicPath.Clone(),itinerary.Clone() );
         }

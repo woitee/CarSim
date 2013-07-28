@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
+    /// <summary>
+    /// An item the cars will pass through to get to their goal.
+    /// Lists incoming cars and judges whether they can pass the crossroad.
+    /// </summary>
     class Crossroad : MapItem
     {
 
@@ -34,27 +38,6 @@ namespace CarSim
 
         public SignType[] priorities = new SignType[4] {SignType.Undefined,SignType.Undefined,SignType.Undefined,SignType.Undefined};
 
-        /*public override bool CanGo(Car car, int dirFrom, int dirTo){
-            int toRight = CoOrds.toRightDir(dirFrom);
-            int toLeft = CoOrds.toLeftDir(dirFrom);
-            int oppDir = CoOrds.oppDir(dirFrom);
-
-            if(getLastPassedDist() > 11){
-                if(toRight == dirTo){
-                    //lastPassed = car;
-                    return true;
-                }
-                if(nearestCar(toRight) > 80){
-                    if(toLeft != dirTo || nearestCar(oppDir) > 80){
-                        //lastPassed = car;
-                        return true;   
-                    }
-                }
-            }
-            return false;
-        }
-        */
-
         private int priority (SignType st){
             switch (st){
                 case SignType.Stop:
@@ -71,9 +54,17 @@ namespace CarSim
             return priority(priorities[dir1]) > priority(priorities[dir2]);
         }
 
+        /// <summary>
+        /// Asks whether a car can pass the crossroad.
+        /// </summary>
+        /// <param name="car">The car, that will pass.</param>
+        /// <param name="dirFrom">Direction the car is coming from.</param>
+        /// <param name="dirTo">Direction the car is going to.</param>
+        /// <returns>Boolean value, whether the car can pass.</returns>
         public override bool CanGo(Car car, int dirFrom, int dirTo){
-            if (priorities[dirFrom] == SignType.Stop && car.speed > 0.03) {return false;} 
-            
+            if (priorities[dirFrom] == SignType.Stop && (car.speed > 0.03 || car.coords.Distance(dispCoords) > 15)) {return false;} 
+            if (nearestCar(dirFrom) != car) {return false;}
+
             int toLeft = CoOrds.toLeftDir(dirFrom);
             int oppDir = CoOrds.oppDir(dirFrom);
             int toRight = CoOrds.toRightDir(dirFrom);
@@ -118,6 +109,9 @@ namespace CarSim
             return false;
         }
 
+        /// <summary>
+        /// Resets the crossroad, needs to be done when loading a new simulation.
+        /// </summary>
         public override void Reset(){
             base.Reset();
             lastPasses = new List<Car>();

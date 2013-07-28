@@ -42,8 +42,14 @@ namespace CarSim
 
         private void mainTimer_Tick(object sender, EventArgs e)
         {
-            Bitmap bmp;
-            sim.Tick(out bmp);
+            Bitmap bmp; int ticks;
+            if (sim.Tick(out bmp, out ticks)){
+                mainTimer.Stop();
+                System.Windows.Forms.MessageBox.Show("Simulation finished after "+ticks+
+                                                     " ticks ("+Math.Round( (double)ticks/65,1 )+" seconds at 65 fps).");
+
+                stopToolStripMenuItem.Enabled = false;
+            }
             pbCars.Image = bmp;
 
             FPSlabel.Text = "FPS: "+FPSCounter.Tick();
@@ -60,7 +66,7 @@ namespace CarSim
                 pbOverlay.Image = sim.DrawSignsAndDepots();
                 stopToolStripMenuItem.Enabled = false;
                 paused = false;
-                mainTimer_Tick(null, null);
+                pbCars.Image = new Bitmap(pbBackground.Width, pbBackground.Height);
                 mainTimer.Stop();
             }
         }

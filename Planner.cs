@@ -179,7 +179,7 @@ namespace CarSim
 
                         if(dist[next.coords.x, next.coords.y] > min + objmap[minCo.x, minCo.y].fromPaths[i].Length){
                             if(dist[next.coords.x, next.coords.y] == int.MaxValue) {found.Add(next.coords);}
-                            dist[next.coords.x, next.coords.y] = min + objmap[minCo.x, minCo.y].fromPaths[i].Length;
+                            dist[next.coords.x, next.coords.y] = min + objmap[minCo.x, minCo.y].fromPaths[i].Length + 1;
                             prev[next.coords.x, next.coords.y] = minCo;
                         }
                     }                   

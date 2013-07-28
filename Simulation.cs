@@ -62,7 +62,7 @@ namespace CarSim
             tracer.Trace("Simulation started.");
         }
 
-        public void Tick(out Bitmap carsBitmap){
+        public bool Tick(out Bitmap carsBitmap, out int totalTicks){
             activeCars.RemoveAll(car => car.Tick()); //main simulation step hidden here
             while ((carStarts.Length > nextCar) && (carStarts[nextCar] <= time)){ //insert new cars
                 
@@ -77,6 +77,9 @@ namespace CarSim
             }
             carsBitmap = drawer.DrawCars(activeCars);
             time++;
+            
+            totalTicks = time;
+            return (activeCars.Count == 0 && nextCar == cars.Length);
         }
 
         public void Stop(){
