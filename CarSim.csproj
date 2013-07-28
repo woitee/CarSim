@@ -94,7 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\CarS.png" />
-    <None Include="Resources\Signs_strip9.png" />
+    <None Include="Resources\Signs.png" />
     <None Include="Resources\Depot.png" />
     <Content Include="Resources\Roads.png" />
   </ItemGroup>

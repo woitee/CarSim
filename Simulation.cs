@@ -110,6 +110,18 @@ namespace CarSim
                             if(count>=3){
                                 Crossroad crd = new Crossroad(new CoOrds(j,i),crossList.Count);
                                 crossList.Enqueue(crd);
+                                for (int k = 0; k < 4; k++){
+                                    if(signmap[j,i,k] != null){
+                                        switch(signmap[j,i,k].type){
+                                            case SignType.Mainway:
+                                            case SignType.Giveway:
+                                            case SignType.Stop:
+                                                int newk = CoOrds.oppDir(k);
+                                                crd.priorities[newk] = signmap[j,i,k].type;
+                                                break;
+                                        }
+                                    }
+                                }
                                 objmap[j,i]=crd;
                             }
                             break;

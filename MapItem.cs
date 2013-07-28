@@ -35,11 +35,17 @@ namespace CarSim
             }
         }
 
-        protected double nearestCar(int dirFrom){
+        protected double nearestCarDist(int dirFrom){
             if(incomCars[dirFrom].Count == 0){
                 return double.PositiveInfinity;
             }
             return incomCars[dirFrom].First().coords.Distance(dispCoords);
+        }
+        protected Car nearestCar(int dirFrom){
+            if(incomCars[dirFrom].Count == 0){
+                return null;
+            }
+            return incomCars[dirFrom].First();
         }
         public int getDirOf(MapItem mapItem){
             for (int i = 0; i < 4; i++){

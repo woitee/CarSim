@@ -41,7 +41,7 @@ namespace CarSim
         }
         private double _maxSpeed;
         private double _actualMaxSpeed;
-        private double speed;
+        public double speed;
         private double X;
         private double Y;
 
@@ -117,6 +117,28 @@ namespace CarSim
             this._coords = coords;
             this._direction = direction;
             this.itinerary = itinerary;
+        }
+
+        public int willTurn(){ //return where is this car gonna turn at the next crossroad 0-2 left straight right
+            bool isNext = false;
+            foreach(ItinPart ip in itinerary.route){
+                if (isNext){
+                    switch(ip.type){
+                        case ItinType.GoTo:
+                            return 1;
+                        case ItinType.TurnLeftTo:
+                            return 0;
+                        case ItinType.TurnRightTo:
+                            return 2;
+                        default:
+                            return -1;
+                    }
+                }
+                if(ip.type == ItinType.EnterCrossroad){
+                    isNext = true;
+                }
+            }
+            return -1;
         }
 
         public Itinerary MakeItinerary(){
@@ -482,9 +504,8 @@ namespace CarSim
 
                             int newIncomDir = CoOrds.oppDir(cross.getEndDir(cross.getDirOf(newCross)));
                             //int newIncomDir = newCross.getDirOf(cross);
-                            inFront = newCross.incomCars[newIncomDir].LastOrDefault();
-                                    
-
+                            
+                            inFront = newCross.incomCars[newIncomDir].LastOrDefault();      
                             newCross.incomCars[newIncomDir].Add(this);
                             setCross(newCross, newCross.getDirOf(cross));
                             maxSpeed = _actualMaxSpeed; passingAllowed = true; //cancel whats forbidden

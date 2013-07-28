@@ -9,6 +9,7 @@ namespace CarSim
     class Sign
     {
         public SignType type;
+        
         public Sign(SignType type){
             this.type = type;
         }
@@ -16,6 +17,8 @@ namespace CarSim
             switch(name){
                 case "noway":
                     return SignType.Noway;
+                case "oneway":
+                    return SignType.Oneway;
                 case "notthisway":
                     return SignType.Notthisway;
                 case "nopass":
@@ -47,6 +50,6 @@ namespace CarSim
     }
     public enum SignType
     {
-        Notthisway, Noway, Nopass, Max30, Max60, Max90, Stop, Mainway, Giveway, Undefined
+        Notthisway, Noway, Nopass, Max30, Max60, Max90, Stop, Mainway, Giveway, Oneway, Undefined
     }
 }
