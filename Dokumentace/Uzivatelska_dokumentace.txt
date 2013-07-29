@@ -1,0 +1,119 @@
+UZIVATELSKA DOKUMENTACE PROGRAMU CARSIM
+Program naprogramoval Vojtech Cerny
+Zapocet letniho semestru 2012/2013
+z predmetu Programovani II (NPRG031)
+
+OBSAH
+  I. Anotace
+ II. Ovladani programu
+III. Format vstupniho souboru
+	a) Popis mapy
+	b) Popis znacek
+	c) Popis aut
+ IV. Vystup
+
+I. Anotace
+----------
+Auta jedouci po silnici nam mohou pripadat jako kazdodenni zalezitost, ale
+jak komplikovana takova jizda autem vubec je? Jak slozite je vlastne umistit
+dopravni znacky tak, aby auta dorazila do svych cilu za rozumnou dobu?
+Pro priblizeni se k odpovedim jsme vytvorili simulaci dopravniho provozu.
+
+II. Ovladani programu
+---------------------
+Pro ovladani programu slouzi pouze tlacitka v liste v horni casti okna.
+Jako prvni je treba nahrat vstupni soubor kliknutim na tlacitko "File" a pote
+"Load". Tim se zobrazi okno urcene pro vyber souboru, vstupni soubor vyberte a
+pote stisknete OK. Nahrat novy soubor muzete kdykoliv, i v prubehu simulace.
+Probihajici simulace bude zastavena az kdyz vyberete novy soubor.
+
+Po nahrani souboru by se vam melo misto cerne plochy uprostred vykreslit mapa.
+Na teto mape budou jezdit auta urcena ve vstupnim souboru.
+
+Pro spusteni simulace staci stisknout tlacitko "Start", taktez v horni liste.
+Pri opakovanem stisknuti "Start" zacne simulace opet od zacatku.
+
+Simulace muzete pri prubehu zapauzovat kliknutim na "Stop".
+Pro obnoveni zapauzovane simulace staci stisknout tlacitko "Unpause", ktere je
+nyni v liste misto tlacitka "Stop".
+
+Pri pokusu o nahrani neplatneho souboru se vam pod hlavnim oknem simulace
+zobrazi text s informaci o konkretni chybe.
+
+III. Format vstupniho souboru
+-----------------------------
+Vstupni soubor ma tri casti, ktere jsou zadany primo po sobe.
+Jsou jimi: mapa, seznam znacek a seznam aut.
+	a) Popis mapy
+	-------------
+	Mapa je celkem 8 radku, kazdy z nich obsahuje 10 znaku a to jeden z: .+D
+	Tyto znaky reprezentuji nakres mapy o rozmerech 10*8 poli.
+	Interpretace znaku:
+	. znamena, ze pole je prazdne.
+	+ znamena, ze polem vede silnice, ktera se pripoji automaticky k sousednim
+		polim, ke kterym se pripojit muze
+	D znamena, ze na poli je depo, ze ktereho, nebo do ktereho, jezdi auta
+	
+	b) Popis znacek
+	---------------
+	Po popisu mapy nasleduje radek "===SIGNS==="
+	a po nem nasleduje seznam znacek v mape
+	Kazda znacka je popsana na samostatnem radku, na kterem jsou ctyri parametry
+	oddelene jednou mezerou
+	Prvni z nich je typ znacky, coz je jedno z klicovych slov:
+	notthisway noway nopass max30 max60 max90 stop mainway giveway oneway
+	
+	Interpretace klicovych slov:
+	notthisway - Zakaz vjezdu
+	noway - Zakaz vjezdu v obou smerech
+	nopass - Zakaz predjizdeni
+	max30 - Maximalni povolena rychlost 30 km/h
+	max60 - Maximalni povolena rychlost 60 km/h
+	max90 - Maximalni povolena rychlost 90 km/h
+	stop - Stuj, dej prednost v jizde
+	mainway - Hlavni silnice
+	giveway - Dej prednost v jizde
+	oneway - Jednosmerny provoz
+
+	Druhym a tretim parametrem jsou souradnice znacky na mape ve tvaru x y.
+	Jsou to cela cisla v rozmezi 0-9 a 0-7 respektive.
+	Ctvrtym parametrem je orientace znacky, a to jedno ze slov
+	up down left right
+	znamenajici nahoru, dolu, doleva, doprava; oznacujici kterym smerem je znacka
+	otocena
+
+	Poznamky ke znackam:
+	Efekt znacek konci u nejblizsi krizovatky, davat ke krizovatce omezeni
+	predjizdeni ci rychlosti tak nema efekt. Znacky upravujici prednost v jizde
+	vsak maji efekt pouze na stejnem poli jako je krizovatka.
+	Vsechny znacky plati pouze v tom smeru ve kterem jsou umisteny, a to vcetne
+	znacky "Zakaz vjezdu v obou smerech". Pro opravdove zakazani provozu v obou
+	smerech je tak treba dat tuto znacku do obou smeru.
+	Rozdil mezi znackou "Zakaz vjezdu" a "Zakaz vjezdu v obou smerech" je tak
+	pouze v grafice znacky.
+	Znacka "Jednosmerny provoz" nema zadny prakticky efekt a je tak pouze graficka
+	pro zobrazeni realne vypadajiciho umisteni znacek.
+
+	c)Popis aut
+	Kazde auto je popsane na samostatnem radku a ma tvar ctyr cisel.
+	Prvni a druhy je cislo depa ze ktereho vyjizdi a ke kteremu miri.
+	Depa jsou ocislovany postupne pri cteni mapy po radcich od nuly.
+	Na mape se tremi depy jsou tak povolena pouze cislo 0, 1 a 2.
+	Cislo ciloveho depa se musi lisit od cisla zdrojoveho depa.
+
+	Tretim parametrem je cislo, bud cele, nebo s desetinnou teckou, kazdopadne
+	kladne, udavajici rychlost auta v km/h.
+
+	Ctvrym parametrem je cislo, bude cele, nebo s desetinnou teckou, kladne,
+	udavajici cas po kterem auto vyrazi depa v sekundach.
+	(Cas nemusi odpovidat celym sekundam pokud bezi narocna simulace - pomalu).
+
+	Auta musi byt dale usporadana neostre vzestupne dle ctvrteho parametru.
+
+Vzorove vstupy jsou ve slozce exampleInputs. Staci je nahrat pomoci File->Load
+a pak jen spustit pomoci Start.
+
+IV. Vystup
+----------
+Vystupem je postupne vykreslovani probihajici spustene simulace, a po skonceni
+se zobrazi dialogove okno, s informaci o trvani simulace.

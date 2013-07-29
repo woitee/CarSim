@@ -1,0 +1,151 @@
+PROGRAMATORSKA DOKUMENTACE PROGRAMU CARSIM
+Program naprogramoval Vojtech Cerny
+Zapocet letniho semestru 2012/2013
+z predmetu Programovani II (NPRG031)
+
+OBSAH
+  I. Anotace
+ II. Presne zadani
+III. Zvoleny algoritmus
+ IV. Diskuse vyberu algoritmu
+  V. Program
+ VI. Alternativni programova reseni a prubeh praci
+
+Pozn. Velkou cast programatorske dokumentace tvori komentare ve zdrojovem kodu.
+
+I. Anotace
+----------
+
+Auta jedouci po silnici nam mohou pripadat jako kazdodenni zalezitost, ale
+jak komplikovana takova jizda autem vubec je? Jak slozite je vlastne umistit
+dopravni znacky tak, aby auta dorazila do svych cilu za rozumnou dobu?
+Pro priblizeni se k odpovedim jsme vytvorili simulaci dopravniho provozu.
+
+II. Presne zadani
+-----------------
+
+Ulohou programu je simulovat dopravni situaci na ctvercovem poli.
+Na mape jsou depa a cesty mezi nimi, z dep auta vyjizdeji a do jinych miri.
+
+Pozadavky:
+Vizualizace prubehu simulace
+Kazde auto si samo najde nejkratsi cestu k cili
+Konfigurovatelnost aut (minimalne rychlost)
+Interakce aut (pomale auto zdrzuje rychle apod.)
+Auta dodrzuji pravidla silnicniho provozu (jizda vpravo,
+standardne prednost zprava apod.)
+
+Dodatecne pozadavky - pokud bude cas:
+Vytvareni map i aut z uzivatelskeho prostredi
+Dopravni znacky, podle kterych auta jezdi
+
+Poznamka: Nekolik dopravnich znacek bylo implementovano, editace simulace
+z uzivatelskeho prostredi nikoliv.
+
+III. Zvoleny algoritmus
+-----------------------
+Spojita simulace s co nejvetsim mnozstvim informaci predpocitanym dopredu.
+Konkretne si kazde auto vytvori seznam cilu (kam jet, kam zatocit, kde projet
+krizovatkou apod.) a podle nich jezdi, aby co nejmene zalezitosti muselo resit
+az za jizdy.
+
+IV. Diskuze vyberu algoritmu
+----------------------------
+Spojita simulace se na tuto ulohu hodi proto, ze snadno muzeme vizualizovat
+prubeh simulace, staci po kazdem kroku vykreslit stav.
+
+Snaha v programu byla udelat simulaci rychlou a robustni, proto jsme
+predpocitali co nejvice informaci, abychom ulevili vypoctu pri vykonavani.
+Proto jsou take vsechny docasne cile zpracovavany postupne a precizne, a auto
+muze v jednom kroku simulace splnit vice nez jeden. Prebytecne rychlosti pri
+dosahovani cilu nejsou zahazovany, to aby auta jela co nejpresneji.
+
+V. Program
+----------
+Program je rizen ze tridy Simulation.cs, ktera ma metody pro nacteni souboru
+simulace Load, pro zapocnuti simulace Start, a pro provedeni kroku simulace
+Tick, a pro vykresleni pozadi a popredi. Obsahuji informace o mape ve znacich,
+o krizovatkach, depech a cedulich na jednotlivych souradnicich.
+Hlavni cast kroku simulace je simulovani pohybu jednotlivych aut.
+Pro provedeni volame funkce Tick jednotlivych aut (Car.cs), ktera se tim
+posunou dopredu.
+
+V autech je take hlavni logika programu, auta si pocitaji zda mohou zrychlit,
+kolik maji zpomalit, nasleduji cestu, predjizdeji se apod.
+Jedine co auta sami neresi je prednost na krizovatkach. To zajistuje objekt
+Crossroad.cs, ktery eviduje prijizdejici auta a dava prednost jednotlivym
+autum.
+
+Pred zacatkem simulace je treba naplanovat cesty. Cesta (Path.cs) je pole
+objektu PathPart.cs, ktere popisuji cast cesty. Urcuji, zda je rovna, nebo
+kterym smerem se staci (ve tvaru ctvrtkruznice), a maji vzdy informaci od - do,
+popripade modifikator cesty typu omezena rychlost ci zakaz predjizdeni.
+ 
+Cesty mezi krizovatkami a depy vytvori na zacatku trida Planner.cs, ktera po
+nacteni aut take najde pomoci Dijkstrova algoritmu trasy od jednoho depa
+k druhemu. Tuto cestu si pak samo auto (Car.cs) prevede na frontu docasnych
+cilu (Itinerary.cs), ktere pak splnuje jak postupuje simulaci.
+
+Pri nahravani mapy se take zpracuji jednotlive znacky, ktere funguji klasickym
+zpusobem znamym z klasicke dopravy.
+
+Pote se spusti samotna simulace, auta v simulaci plynule pribyvaji a ubyvaji
+v promenne activeCars, a po skonceni simulace vrati funkce Tick hodnotu true,
+a simulace se ukonci, zastavi se Timer, a MainForm zobrazi dialogove okno s
+celkovym casem simulace.
+
+VI. Alternativni programova reseni a prubeh praci
+-------------------------------------------------
+Program je psan tak, aby (vetsinou) logicke celky byly spojene do
+odpovidajicich trid, logika je v autech stejne tak, jako jsou inteligentnimi
+prvky ridici aut na fyzickych silnicich. Cast logiky je v krizovatkach, z toho
+duvodu, aby si jednotliva auta nemusela drzet prehled co k nim jede ze strany
+sama, coz by jiste bylo velmi komplikovane.
+
+Budiz tato cast tez chapana jako povzdech autora nad dilem.
+
+Pri psani programu bylo z casovych duvodu provedena spousta kompromisu,
+na mistech bylo misto rozumneho prepsani velke casti kodu resen problem
+"zaplatou", ale bez toho by temer nebyl mozny pohyb dopredu.
+
+Komplikacemi v doprave je, ze obrovska spousta veci souvisi s dalsi spoustou,
+jako priklad vemme predjizdeni a dopravni znacky. Reseni zalezitosti stylu 
+"predjizdim auto, ale nekde prede mnou je omezena rychlost, mohu predjet?"
+se vyskytuji po houfech, a jsou pomerne netrivialni, pouhe reseni otazky jak
+spravne plynule zrychlit a nasledne zpomalit na krizovatce muze vest na reseni
+kvadratickych rovnic a podobne.
+
+Proto bylo pri psani programu upusteno od spousty zamyslenych veci, ale tak,
+aby byla simulace na pohled hezka.
+Auta dokazou magicky zpomalit z libovolne rychlosti na nulu na vzdalenosti mezi
+dvema krizovatkami, misto konfigurovatelnych brzd, ale zpomaluji postupne.
+Auta prijizdejici ke krizovatce kazdy krok pocitaji, zda mohou projet, toto by
+bylo lepsi resit pri zmene, obdobne s rychlym autem za pomalym, ale to jsou jen
+otazky rychlosti simulace.
+
+Simulace byla psana jako idealni, ze auta nebudou provadet nebezpecne akce, 
+tedy nebudou nikdy kolidovat, coz se celkem ukazalo jako problematicke a
+spatne slucitelne s velkou konfigurovatelnosti aut.
+
+Mozna se ctenar pri zkouseni programu trochu pozastavil nad tim, jak jsou auta
+a cesty male. Je tomu tak proto, aby na kazdem poli mohla existovat rozumne
+citelna znacka v kazdem smeru. Dalo by se tomu vyhnout napr. pocitanim znacek
+o pole vzdalenych od krizovatky, ale uz tak slozity program by byl jeste
+slozitejsi. I pri teto velikosti vsak clovek muze testovat spousty zajimavych
+dopravnich situaci.
+
+Pokud by nekdo pokousel obdobnou simulaci programovat, zde jsou ma doporuceni:
+-Pocitat od zacatku s kolizemi aut.
+-Vedet, ze krizovatkou muze projizdet vice aut zaroven.
+-Navrhnout velmi dobry interface uvnitr aut (funkce kde bude auto za urcity cas,
+ jak daleko jede auto rovne, funkce planujici zrychleni/zpomaleni k souradnicim)
+-Az podle tohoto interface se rozhodovat, jak urcite casti kodu psat
+-A hlavne, mit na projekt hodne casu, nikam nespechat, resit veci spravne
+-Testovat, testovat a testovat
+
+Ja sam doufam ze bych podobny projekt zkusil naprogramovat jeste znovu, veci co
+by se dalo pridat je spousta (semafory, chodci, ...) a mozna z toho udelat
+hru, kde se hrac snazi vyresit dopravni situaci pouze spravnym umistenim
+znacek.
+
+Pro konkretni informace o prubehu praci viz. github.com/woitee/CarSim
