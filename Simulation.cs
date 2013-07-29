@@ -18,7 +18,7 @@ namespace CarSim
         public const int WIDTH = 10; //number of blocks on width
         public const int HEIGHT = 8; //number of blocks on height
         public const int TILESIZE = 64; //size of a square in pixels
-        public const int FRAMERATE = 60; //default framerate
+        public const int FRAMERATE = 65; //default framerate
 
         public static CoOrds[] dirs = new CoOrds[4] {new CoOrds(1,0),
                                                            new CoOrds(0,1),
@@ -230,6 +230,7 @@ namespace CarSim
                 }
             }
             ProcessMap();
+            int lastOffset = 0;
             List<Car> stockCars = new List<Car>();
             List<int> starts = new List<int>();
             while(!sr.EndOfStream){
@@ -251,7 +252,12 @@ namespace CarSim
                     }
                     car.path = pth;
                     stockCars.Add(car);
-                    starts.Add( (int)Math.Round( double.Parse(arr[3],CultureInfo.InvariantCulture)*FRAMERATE ));
+                    int arg4 = (int)Math.Round( double.Parse(arr[3],CultureInfo.InvariantCulture)*FRAMERATE );
+                    if(arg4 < lastOffset){
+                        tracer.Trace("Loading error: Car time offset too high at: "+line);
+                        return false;
+                    }
+                    starts.Add( arg4 );
                 } catch (Exception) {
                     tracer.Trace("Loading error: Invalid description of car: \""+line+"\"");
                     return false;
