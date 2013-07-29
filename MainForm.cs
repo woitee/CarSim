@@ -33,20 +33,17 @@ namespace CarSim
             pbOverlay.Parent = pbCars;
 
             sim.tracer = new Tracer(infoLabel);
-            //TEMP
-            sim.Load("save.txt");
-            pbBackground.Image = sim.DrawBackground();
-            pbOverlay.Image = sim.DrawSignsAndDepots();
+            sim.tracer.Trace("Program started, please continue by loading a simulation file by pressing File->Load");
         }
 
 
         private void mainTimer_Tick(object sender, EventArgs e)
         {
-            Bitmap bmp; int ticks;
+            Bitmap bmp; long ticks;
             if (sim.Tick(out bmp, out ticks)){
                 mainTimer.Stop();
                 System.Windows.Forms.MessageBox.Show("Simulation finished after "+ticks+
-                                                     " ticks ("+Math.Round( (double)ticks/65,1 )+" seconds at 65 fps).");
+                                                     " ticks ("+Math.Round( (double)ticks/65 , 1 )+" seconds at 65 fps).");
 
                 stopToolStripMenuItem.Enabled = false;
             }
@@ -60,8 +57,7 @@ namespace CarSim
             ofDialog.Filter = "Text Files (.txt)|*.txt|All Files (*.*)|*.*";
             ofDialog.FilterIndex = 1;
 
-            if (ofDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK){
-                sim.Load(ofDialog.FileName);
+            if (ofDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK && sim.Load(ofDialog.FileName)){
                 pbBackground.Image = sim.DrawBackground();
                 pbOverlay.Image = sim.DrawSignsAndDepots();
                 stopToolStripMenuItem.Enabled = false;

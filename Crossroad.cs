@@ -26,6 +26,10 @@ namespace CarSim
                 lastPasses.Add(value);
             }
         }
+        /// <summary>
+        /// Gets distance of nearest passed car.
+        /// </summary>
+        /// <returns>Distance from passed car.</returns>
         private double getLastPassedDist(){
             double tR = double.PositiveInfinity;
             foreach(Car car in lastPasses){
@@ -36,8 +40,14 @@ namespace CarSim
         }
         public bool passBooked = false;
 
+        //contains signs assigned to specific directions
         public SignType[] priorities = new SignType[4] {SignType.Undefined,SignType.Undefined,SignType.Undefined,SignType.Undefined};
 
+        /// <summary>
+        /// Conversion from SignType, to priority value.
+        /// </summary>
+        /// <param name="st">SignType to convert.</param>
+        /// <returns>An integer value. Higher integer means higher priority.</returns>
         private int priority (SignType st){
             switch (st){
                 case SignType.Stop:
@@ -50,6 +60,12 @@ namespace CarSim
             }
             return -1;
         }
+        /// <summary>
+        /// Returns true if cars going from first direction should pass before cars going from second direction.
+        /// </summary>
+        /// <param name="dir1">Direction 0-3 of right, down, left, up respectively of first direction.</param>
+        /// <param name="dir2">Direction 0-3 of right, down, left, up respectively of second direction.</param>
+        /// <returns>A boolean value.</returns>
         private bool hasPriority(int dir1, int dir2){ //returns true if sign at dir1 has higher priority than dir2
             return priority(priorities[dir1]) > priority(priorities[dir2]);
         }

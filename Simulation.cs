@@ -9,6 +9,10 @@ using System.Globalization;
 namespace CarSim
 {
     
+    /// <summary>
+    /// Simulation class, contains all information and processes simulation steps.
+    /// Call its public functions to initiate and proceed simulation. Returns images of current state.
+    /// </summary>
     class Simulation
     {
         public const int WIDTH = 10; //number of blocks on width
@@ -40,16 +44,27 @@ namespace CarSim
         public static int Time{
             get {return time;}
         }
-
+        
+        /// <summary>
+        /// Draws background, based on the objects in the simulation.
+        /// </summary>
+        /// <returns>A bitmap containing the background.</returns>
         public Bitmap DrawBackground(){
             drawer = new Drawer(map);
             return drawer.DrawBackground();
         }
 
+        /// <summary>
+        /// Draws signs and depots, meant to be used as an overlay to cars.
+        /// </summary>
+        /// <returns>Bitmap containing signs and depots.</returns>
         public Bitmap DrawSignsAndDepots(){
             return drawer.DrawSignsAndDepots(depots,signmap);
         }
 
+        /// <summary>
+        /// Resets and starts the simulation.
+        /// </summary>
         public void Start(){
             time = 0; nextCar = 0;
             activeCars = new List<Car>();
@@ -62,7 +77,13 @@ namespace CarSim
             tracer.Trace("Simulation started.");
         }
 
-        public bool Tick(out Bitmap carsBitmap, out int totalTicks){
+        /// <summary>
+        /// Processes everything needed to advance one tick.
+        /// </summary>
+        /// <param name="carsBitmap">Outputs the bitmap of cars.</param>
+        /// <param name="totalTicks">Outputs number of ticks elapsed since start.</param>
+        /// <returns>Boolean value, whether the simulation has finished.</returns>
+        public bool Tick(out Bitmap carsBitmap, out long totalTicks){
             activeCars.RemoveAll(car => car.Tick()); //main simulation step hidden here
             while ((carStarts.Length > nextCar) && (carStarts[nextCar] <= time)){ //insert new cars
                 
@@ -80,10 +101,6 @@ namespace CarSim
             
             totalTicks = time;
             return (activeCars.Count == 0 && nextCar == cars.Length);
-        }
-
-        public void Stop(){
-            activeCars = new List<Car>();
         }
 
         /// <summary>
@@ -148,52 +165,107 @@ namespace CarSim
             }
         }
 
-        public void Load(string path = "save.txt"){
+        /// <summary>
+        /// Loads map from file. Processes everything needed in advance, start can be called immediately after.
+        /// Traces out parse errors.
+        /// </summary>
+        /// <param name="path">Path to a file to be loaded.</param>
+        /// <returns>Boolean value, if the file has been loaded sucessfully.</returns>
+        public bool Load(string path = "save.txt"){
             //loads map from file
             //initialize
-            Stop();
+            activeCars = new List<Car>();
             map = new char[WIDTH,HEIGHT];
             objmap = new MapItem[WIDTH,HEIGHT];
             //process
             string line;
-            StreamReader sr = new StreamReader(path);
+            StreamReader sr;
+            try{
+                sr = new StreamReader(path);
+            } catch(Exception){
+                tracer.Trace("Loading error: File invalid. Does the file exist?");
+                return false;
+            }
             for (int i = 0; i < HEIGHT; i++){
                 line = sr.ReadLine();
+                if(line == null || line.Length != WIDTH){
+                    tracer.Trace("Loading error: Incorrect map dimensions. Make sure the map is "+WIDTH+"x"+HEIGHT+" characters.");
+                    return false;
+                }
                 for (int j = 0; j < WIDTH; j++){
+                    if("+D.".IndexOf(line[j]) == -1) {
+                        tracer.Trace("Loading error: Invalid map character: "+line[j]+". The map must consist of only \"+D.\" characters.");
+                        return false;
+                    }
                     map[j,i]=line[j];
                 }
             }
-            sr.ReadLine(); line = sr.ReadLine();
+            if (sr.ReadLine() != "===SIGNS==="){
+                tracer.Trace("Loading error: Line \"===SIGNS===\" must immediately follow map description.");
+                return false;
+            }
+            line = sr.ReadLine();
             signmap = new Sign[WIDTH, HEIGHT, 4];
             while(line != "===CARS==="){
-                string[] arr = line.Split(' ');
-                //Type X Y direction
-                Sign sign = new Sign(Sign.typeString(arr[0]));
-                int signX = int.Parse(arr[1]);
-                int signY = int.Parse(arr[2]);
-                int signDir = CoOrds.dirFromString(arr[3]);
-                signmap[signX,signY,signDir] = sign;
-                line = sr.ReadLine();
+                if(sr.EndOfStream){
+                    tracer.Trace("Loading error: Line \"===CARS===\" expected before end of file.");
+                    return false;
+                }
+                try{
+                    string[] arr = line.Split(' ');
+                    //Type X Y direction
+                    Sign sign = new Sign(Sign.typeString(arr[0]));
+                    if(sign.type == SignType.Undefined){
+                        tracer.Trace("Loading error: Invalid sign keyword: "+arr[0]);
+                        return false;
+                    }
+                    int signX = int.Parse(arr[1]);
+                    int signY = int.Parse(arr[2]);
+                    int signDir = CoOrds.dirFromString(arr[3]);
+                    signmap[signX,signY,signDir] = sign;
+                    line = sr.ReadLine();
+                } catch(Exception){
+                    tracer.Trace("Loading error: Invalid description of sign: \""+line+"\"");
+                    return false;
+                }
             }
             ProcessMap();
             List<Car> stockCars = new List<Car>();
             List<int> starts = new List<int>();
-            do {
-                line = sr.ReadLine();
-                string[] arr = line.Split(' ');
-                //From(DepotIndex) To(DepotIndex) Speed(double) TimeStart
-                Car car = new Car( double.Parse(arr[2], CultureInfo.InvariantCulture)/145 );
-                car.path = planner.FindPath(car,depots[int.Parse(arr[0])],depots[int.Parse(arr[1])]);
-                stockCars.Add(car);
-                starts.Add( (int)Math.Round( double.Parse(arr[3],CultureInfo.InvariantCulture)*FRAMERATE ));
-            } while(!sr.EndOfStream);
+            while(!sr.EndOfStream){
+                try{
+                    line = sr.ReadLine();
+                    string[] arr = line.Split(' ');
+                    //From(DepotIndex) To(DepotIndex) Speed(double) TimeStart
+                    Car car = new Car( double.Parse(arr[2], CultureInfo.InvariantCulture)/145 );
+                    int arg1 = int.Parse(arr[0]);
+                    int arg2 = int.Parse(arr[1]);
+                    if(arg1 == arg2){
+                        tracer.Trace("Loading Error: Destination depot has to be different from source depot.");
+                        return false;
+                    }
+                    Path pth = planner.FindPath(car,depots[arg1],depots[arg2]);
+                    if (pth == null){
+                        tracer.Trace("Loading Error: Couldn't find valid path between depot "+arg1+" and "+arg2);
+                        return false;
+                    }
+                    car.path = pth;
+                    stockCars.Add(car);
+                    starts.Add( (int)Math.Round( double.Parse(arr[3],CultureInfo.InvariantCulture)*FRAMERATE ));
+                } catch (Exception) {
+                    tracer.Trace("Loading error: Invalid description of car: \""+line+"\"");
+                    return false;
+                }
+            }
             cars = stockCars.ToArray();
             carStarts = starts.ToArray();
             sr.Close();
             tracer.Trace("Map loaded.");
+            return true;
         }
 
         //Saving not implemented, modifying map at runtime is not yet allowed
+        //Function not finished
         public void Save(string path = "save.txt"){
             //saves map to file
             StreamWriter sw = new StreamWriter(path);

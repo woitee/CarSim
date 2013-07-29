@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
-    
+    /// <summary>
+    /// A class containing functions for drawing all parts of the simulation.
+    /// </summary>
     class Drawer
     {
         private char[,] map;
@@ -20,6 +22,10 @@ namespace CarSim
             this.map = map;
         }
 
+        /// <summary>
+        /// Draws Background, consisting of road and grass tiles.
+        /// </summary>
+        /// <returns>An image with the background.</returns>
         public Bitmap DrawBackground(){
             Bitmap bmp = new Bitmap(WIDTH*TILESIZE,HEIGHT*TILESIZE);
             Graphics g = Graphics.FromImage(bmp);
@@ -47,6 +53,11 @@ namespace CarSim
             return bmp;
         }
 
+        /// <summary>
+        /// Draws cars at their coordinates, with their rotation.
+        /// </summary>
+        /// <param name="cars">A list of cars to draw.</param>
+        /// <returns>An image containing the cars.</returns>
         public Bitmap DrawCars(List<Car> cars){
             Bitmap bmp = new Bitmap(WIDTH*TILESIZE,HEIGHT*TILESIZE);
             Graphics g = Graphics.FromImage(bmp);
@@ -57,6 +68,11 @@ namespace CarSim
             return bmp;
         }
     
+        /// <summary>
+        /// Coordinates offset of a sign drawn, from the top left corner.
+        /// </summary>
+        /// <param name="dir">Direction 0-3, meaning right, down, left, up; respectively.</param>
+        /// <returns>CoOrds of the offset.</returns>
         private CoOrds signOffset(int dir){
             switch(dir){
                 case 0:
@@ -72,6 +88,12 @@ namespace CarSim
             }
         }
 
+        /// <summary>
+        /// Draws the topmost layer, containing signs and depots.
+        /// </summary>
+        /// <param name="depots">An array of all the Depot objects to draw.</param>
+        /// <param name="signmap">An array of all the Sign objects to draw, indexed by x,y,direction; respectively.</param>
+        /// <returns>Image with depots and signs drawn.</returns>
         public Bitmap DrawSignsAndDepots(Depot[] depots, Sign[,,] signmap){
             Bitmap bmp = new Bitmap(WIDTH*TILESIZE,HEIGHT*TILESIZE);
             Graphics g = Graphics.FromImage(bmp);

@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
-    //the path consists of parts of either going straight forward, or turning
-    //we chose a representation considering this
-    //PathParts have a location "from" and "to", "from" is inclusive and "to" exclusive
+    /// <summary>
+    /// The path consists of parts of either going straight forward, or turning
+    /// we chose a representation considering this
+    /// PathParts have a location "from" and "to", "from" is inclusive and "to" exclusive.
+    /// PathParts of length 0 have "from" the same as "to".
+    /// </summary>
     class Path
     {
         public PathPart[] route;
@@ -42,6 +45,9 @@ namespace CarSim
         }
     }
 
+    /// <summary>
+    /// One part of the path. Can contain various modifiers, usually picked by signs to the side of the road.
+    /// </summary>
     public class PathPart
     {
         public enum Type{Straight,TurnL,TurnR};

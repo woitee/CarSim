@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
-    //static class for some neccesary math functions
+    //Static class, currently counting only quadratic equation results.
     static class CustomMath
     {
         /// <summary>

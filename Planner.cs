@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
+    /// <summary>
+    /// Class planning paths between depots.
+    /// </summary>
     class Planner
     {
         private char[,] map;
@@ -18,6 +21,10 @@ namespace CarSim
             this.signmap = signmap;
         }
 
+        /// <summary>
+        /// Finds all four connections of the mapitem.
+        /// </summary>
+        /// <param name="mapitem">The mapItem we want to find connections for.</param>
         public void FindConnections(MapItem mapitem){
             for (int i = 0; i < 4; i++){
                 CoOrds c = mapitem.coords.Add(CoOrds.fromDir(i));
@@ -118,6 +125,13 @@ namespace CarSim
             endObj = null; return null;
         }
 
+        /// <summary>
+        /// Returns a specific PathPart modifier, if there's a sign in the proper direction at a proper spot.
+        /// </summary>
+        /// <param name="co">CoOrds of the spot we're asking.</param>
+        /// <param name="direction">Direction we're looking for the Sign.</param>
+        /// <param name="arg">Output, a parameter to the mod.</param>
+        /// <returns>The modifier to driving at this spot.</returns>
         private PathPartMod getPathPartMod(CoOrds co, int direction, out int arg){
             if(signmap[ co.x, co.y, direction ] == null) {arg = -1; return PathPartMod.none;}
             switch (signmap[ co.x, co.y, direction ].type){
@@ -138,6 +152,13 @@ namespace CarSim
             }
         }
 
+        /// <summary>
+        /// Finds path from one depot to another.
+        /// </summary>
+        /// <param name="car">The car we're planning for.</param>
+        /// <param name="dptFrom">Source depot.</param>
+        /// <param name="dptTo">Target depot.</param>
+        /// <returns>Path from one depot to another. Or null if it doesn't exist.</returns>
         public Path FindPath(Car car, Depot dptFrom, Depot dptTo){
             //simple implementation of Dijkstra's algorithm for finding paths between depots
             List<CoOrds> found = new List<CoOrds>();

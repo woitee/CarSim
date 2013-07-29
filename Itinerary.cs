@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
+    /// <summary>
+    /// Class containing a queue of temporary goals for the car to reach.
+    /// </summary>
     class Itinerary{
         public Queue<ItinPart> route;
         public Itinerary(Queue<ItinPart> route){
@@ -20,6 +23,9 @@ namespace CarSim
         }
     }
 
+    /// <summary>
+    /// A temporary goal description. Describes the type and target of the goal.
+    /// </summary>
     public class ItinPart{
         public ItinType type;
         public CoOrds dest;
@@ -40,6 +46,9 @@ namespace CarSim
         }
     }
 
+    /// <summary>
+    /// List of possible short term goals for the car.
+    /// </summary>
     public enum ItinType{
         GoTo, TurnLeftTo, TurnRightTo, AskCrossroad, EnterCrossroad, SpeedLimit, NoPassing
     }

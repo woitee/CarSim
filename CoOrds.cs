@@ -5,7 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CarSim
-{
+{   
+    /// <summary>
+    /// A simple struct describing a point in a plane.
+    /// Most of the functions are self-explanatory.
+    /// A dir in some functions is an integer of 0-3, meaning right, down, left, up; respectively.
+    /// </summary>
     public struct CoOrds{public int x, y;
             public CoOrds (int x, int y) {this.x = x; this.y = y;}
             public bool Equals(CoOrds other){

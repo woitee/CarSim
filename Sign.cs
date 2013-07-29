@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace CarSim
 {
+
+    /// <summary>
+    /// Sign object containing sign info, and some basic processing functions.
+    /// </summary>
     class Sign
     {
         public SignType type;
