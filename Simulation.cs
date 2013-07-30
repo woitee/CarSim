@@ -30,14 +30,14 @@ namespace CarSim
         private Sign[,,] signmap = new Sign[WIDTH, HEIGHT, 4]; //stores info about signs
 
         private List<Car> activeCars = new List<Car>();
-        private Car[] cars;
+        private Car[] cars = new Car[0];
         private int nextCar;
-        private int[] carStarts;
+        private int[] carStarts = new int[0];
 
-        private Depot[] depots;
-        private Crossroad[] crossroads;
+        private Depot[] depots = new Depot[0];
+        private Crossroad[] crossroads = new Crossroad[0];
         private Planner planner;
-        private Drawer drawer;
+        private Drawer drawer = new Drawer(new char[0,0]);
         public Tracer tracer = new Tracer();
 
         private static int time;

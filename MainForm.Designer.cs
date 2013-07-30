@@ -34,8 +34,7 @@
             this.infoLabel = new System.Windows.Forms.Label();
             this.FPSlabel = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.pbBackground)).BeginInit();
@@ -77,7 +76,7 @@
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
+            this.loadFileToolStripMenuItem,
             this.startToolStripMenuItem,
             this.stopToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
@@ -86,24 +85,19 @@
             this.menuStrip1.TabIndex = 6;
             this.menuStrip1.Text = "menuStrip1";
             // 
-            // fileToolStripMenuItem
+            // loadFileToolStripMenuItem
             // 
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadToolStripMenuItem});
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
-            // 
-            // loadToolStripMenuItem
-            // 
-            this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
-            this.loadToolStripMenuItem.Text = "Load";
-            this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
+            this.loadFileToolStripMenuItem.Name = "loadFileToolStripMenuItem";
+            this.loadFileToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl + L";
+            this.loadFileToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.L)));
+            this.loadFileToolStripMenuItem.Size = new System.Drawing.Size(66, 20);
+            this.loadFileToolStripMenuItem.Text = "Load File";
+            this.loadFileToolStripMenuItem.Click += new System.EventHandler(this.loadFileToolStripMenuItem_Click);
             // 
             // startToolStripMenuItem
             // 
             this.startToolStripMenuItem.Name = "startToolStripMenuItem";
+            this.startToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Space)));
             this.startToolStripMenuItem.Size = new System.Drawing.Size(43, 20);
             this.startToolStripMenuItem.Text = "Start";
             this.startToolStripMenuItem.Click += new System.EventHandler(this.startToolStripMenuItem_Click);
@@ -126,6 +120,9 @@
             this.Controls.Add(this.pbBackground);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
+            this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(685, 614);
+            this.MinimumSize = new System.Drawing.Size(685, 614);
             this.Name = "MainForm";
             this.Text = "Simulace Dopravy";
             ((System.ComponentModel.ISupportInitialize)(this.pbBackground)).EndInit();
@@ -143,8 +140,7 @@
         private System.Windows.Forms.Label infoLabel;
         private System.Windows.Forms.Label FPSlabel;
         private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem loadToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem startToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem stopToolStripMenuItem;
     }

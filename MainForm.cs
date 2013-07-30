@@ -22,6 +22,7 @@ namespace CarSim
         public MainForm()
         {
             InitializeComponent();
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             
             //Creating Car layer
             pbCars.Width = pbBackground.Width; pbCars.Height = pbBackground.Height;
@@ -33,7 +34,7 @@ namespace CarSim
             pbOverlay.Parent = pbCars;
 
             sim.tracer = new Tracer(infoLabel);
-            sim.tracer.Trace("Program started, please continue by loading a simulation file by pressing File->Load");
+            sim.tracer.Trace("Program started, please continue by loading a simulation file by pressing Load File");
         }
 
 
@@ -50,21 +51,6 @@ namespace CarSim
             pbCars.Image = bmp;
 
             FPSlabel.Text = "FPS: "+FPSCounter.Tick();
-        }
-
-        private void loadToolStripMenuItem_Click(object sender, EventArgs e){
-            OpenFileDialog ofDialog = new OpenFileDialog();
-            ofDialog.Filter = "Text Files (.txt)|*.txt|All Files (*.*)|*.*";
-            ofDialog.FilterIndex = 1;
-
-            if (ofDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK && sim.Load(ofDialog.FileName)){
-                pbBackground.Image = sim.DrawBackground();
-                pbOverlay.Image = sim.DrawSignsAndDepots();
-                stopToolStripMenuItem.Enabled = false;
-                paused = false;
-                pbCars.Image = new Bitmap(pbBackground.Width, pbBackground.Height);
-                mainTimer.Stop();
-            }
         }
 
         private void startToolStripMenuItem_Click(object sender, EventArgs e){
@@ -96,6 +82,23 @@ namespace CarSim
             } else {
                 mainTimer.Stop();
                 paused = true;
+            }
+        }
+
+        private void loadFileToolStripMenuItem_Click(object sender, EventArgs e){
+            OpenFileDialog ofDialog = new OpenFileDialog();
+            ofDialog.InitialDirectory = Application.StartupPath;
+
+            ofDialog.Filter = "Text Files (.txt)|*.txt|All Files (*.*)|*.*";
+            ofDialog.FilterIndex = 1;
+
+            if (ofDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK && sim.Load(ofDialog.FileName)){
+                pbBackground.Image = sim.DrawBackground();
+                pbOverlay.Image = sim.DrawSignsAndDepots();
+                stopToolStripMenuItem.Enabled = false;
+                paused = false;
+                pbCars.Image = new Bitmap(pbBackground.Width, pbBackground.Height);
+                mainTimer.Stop();
             }
         }
     }
